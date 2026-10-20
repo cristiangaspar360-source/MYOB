@@ -1,0 +1,402 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Guía de Firmas MYOB</title>
+<meta name="description" content="Instructivo paso a paso para enviar cartas y documentos por WhatsApp y recibirlos firmados, listos para PDF o imagen.">
+<meta property="og:title" content="Firmas MYOB · Guía paso a paso">
+<meta property="og:description" content="Envía cartas y documentos por WhatsApp y recíbelos firmados. Sin apps ni cuentas.">
+<meta property="og:image" content="https://cristiangaspar360-source.github.io/MYOB/img/firmas/og.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:type" content="website">
+<meta name="theme-color" content="#13704A">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700&family=Instrument+Sans:wght@400;500;600&display=swap">
+<style>
+/* Layout: guía de una columna; cada paso es texto + captura real del celular lado a lado, apilados en teléfono */
+:root{
+  --bg:#EDF3EE; --surface:#FFFFFF; --ink:#13241B; --muted:#56695D; --line:#D2DDD5;
+  --accent:#13704A; --accent-ink:#FFFFFF; --accent-soft:#DDEFE4; --lime:#9BCB3C; --warn:#9A4B12; --warn-soft:#FBEBDD;
+  --shot-shadow:0 1px 2px rgba(19,36,27,.08),0 14px 34px -14px rgba(19,36,27,.28);
+  --f-display:"Bricolage Grotesque","Instrument Sans",system-ui,sans-serif;
+  --f-ui:"Instrument Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
+  color-scheme:light;
+}
+@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]){
+  --bg:#0E1913; --surface:#15241B; --ink:#E4EEE7; --muted:#9BB1A3; --line:#2A3E32;
+  --accent:#3DBE82; --accent-ink:#04130B; --accent-soft:#1B3A29; --lime:#B5DE5E; --warn:#F0A868; --warn-soft:#3A2614;
+  --shot-shadow:0 1px 2px rgba(0,0,0,.4),0 16px 36px -14px rgba(0,0,0,.7); color-scheme:dark; } }
+:root[data-theme="dark"]{
+  --bg:#0E1913; --surface:#15241B; --ink:#E4EEE7; --muted:#9BB1A3; --line:#2A3E32;
+  --accent:#3DBE82; --accent-ink:#04130B; --accent-soft:#1B3A29; --lime:#B5DE5E; --warn:#F0A868; --warn-soft:#3A2614;
+  --shot-shadow:0 1px 2px rgba(0,0,0,.4),0 16px 36px -14px rgba(0,0,0,.7); color-scheme:dark; }
+
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%;scroll-behavior:smooth}
+@media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.6 var(--f-ui);
+  padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+[hidden]{display:none!important}
+img{max-width:100%;height:auto;display:block}
+a{color:var(--accent)}
+.wrap{max-width:1040px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+h1,h2,h3{font-family:var(--f-display);letter-spacing:-.015em;text-wrap:balance;margin:0;line-height:1.12}
+h1{font-size:clamp(30px,5.4vw,50px)}
+h2{font-size:clamp(24px,3.6vw,32px)}
+h3{font-size:20px;line-height:1.25}
+p{margin:0}
+.muted{color:var(--muted)}
+.eyebrow{font:600 12px/1 var(--f-ui);letter-spacing:.09em;text-transform:uppercase;color:var(--accent)}
+
+header.top{border-bottom:1px solid var(--line);background:var(--surface);position:sticky;top:env(safe-area-inset-top,0px);z-index:5}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--surface)}
+header.top .wrap{display:flex;align-items:center;justify-content:space-between;gap:12px;padding-block:12px}
+.brand{display:flex;align-items:center;gap:10px;font:700 18px/1 var(--f-display);color:var(--ink);text-decoration:none}
+.brand svg{width:28px;height:28px;flex:none}
+.brand small{font:500 12px/1 var(--f-ui);color:var(--muted);letter-spacing:.02em;margin-left:2px}
+.toc{display:flex;gap:6px;flex-wrap:wrap}
+.toc a{font-size:14px;color:var(--muted);text-decoration:none;padding:6px 10px;border-radius:999px;border:1px solid var(--line)}
+.toc a:hover{color:var(--ink)}
+@media (max-width:620px){.toc a.opt{display:none}}
+
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;font:600 16px/1 var(--f-ui);border-radius:12px;padding:15px 20px;border:1px solid var(--line);background:var(--surface);color:var(--ink);cursor:pointer;text-decoration:none;min-height:50px}
+.btn:hover{border-color:var(--muted)}
+.btn svg{width:19px;height:19px;flex:none}
+.btn.primary{background:var(--accent);color:var(--accent-ink);border-color:transparent}
+.btn.primary:hover{filter:brightness(1.06)}
+.btns{display:flex;flex-wrap:wrap;gap:10px}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+
+/* Portada */
+.hero{padding-block:44px 36px}
+.hero .wrap{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,.85fr);gap:40px;align-items:center}
+@media (max-width:820px){.hero .wrap{grid-template-columns:minmax(0,1fr)}}
+.hero-text{display:flex;flex-direction:column;gap:18px;min-width:0}
+.hero-text .lede{font-size:18px;color:var(--muted);max-width:52ch}
+.sheet{position:relative;max-width:340px;justify-self:center;width:100%}
+.sheet img{border-radius:6px;box-shadow:var(--shot-shadow);max-height:430px;object-fit:cover;object-position:top;width:100%;-webkit-mask-image:linear-gradient(#000 78%,transparent);mask-image:linear-gradient(#000 78%,transparent)}
+.sheet .stamp{position:absolute;right:-6px;bottom:22%;background:var(--accent);color:var(--accent-ink);font:600 13px/1.2 var(--f-ui);padding:8px 12px;border-radius:999px;box-shadow:var(--shot-shadow)}
+
+/* Recorrido de 3 momentos */
+.flow{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;padding:0;margin:0;list-style:none}
+@media (max-width:720px){.flow{grid-template-columns:minmax(0,1fr)}}
+.flow li{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:16px 18px;display:flex;gap:14px;align-items:flex-start}
+.flow .n{font:700 15px/1 var(--f-display);color:var(--accent);background:var(--accent-soft);border-radius:50%;width:34px;height:34px;display:grid;place-items:center;flex:none}
+.flow b{display:block;font-weight:600}
+.flow span{color:var(--muted);font-size:14.5px}
+
+section.block{padding-block:48px}
+section.block + section.block{border-top:1px solid var(--line)}
+.block-head{display:flex;flex-direction:column;gap:10px;margin-bottom:28px;max-width:62ch}
+.role{display:inline-flex;align-self:flex-start;align-items:center;gap:8px;font:600 13px/1 var(--f-ui);padding:7px 12px;border-radius:999px;background:var(--accent-soft);color:var(--accent)}
+
+/* Pasos */
+.steps{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:18px;counter-reset:paso}
+.step{display:grid;grid-template-columns:minmax(0,1fr) 300px;gap:28px;align-items:start;background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:24px}
+.step.noimg{grid-template-columns:minmax(0,1fr)}
+@media (max-width:720px){.step{grid-template-columns:minmax(0,1fr);padding:18px;gap:18px}}
+.step-text{display:flex;flex-direction:column;gap:10px;min-width:0}
+.step-num{font:700 13px/1 var(--f-ui);letter-spacing:.06em;color:var(--accent)}
+.step-text p{color:var(--ink)}
+.step-text ul{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:4px}
+.step-text li::marker{color:var(--accent)}
+.btnname{font-weight:600;white-space:nowrap;background:var(--accent-soft);color:var(--accent);padding:1px 7px;border-radius:6px}
+.shot{background:var(--bg);border:1px solid var(--line);border-radius:16px;padding:10px;justify-self:center;width:100%;max-width:300px}
+.shot img{border-radius:10px;box-shadow:var(--shot-shadow)}
+.shot.fade img{-webkit-mask-image:linear-gradient(#000 82%,transparent);mask-image:linear-gradient(#000 82%,transparent)}
+.tip{font-size:14.5px;border-radius:10px;padding:10px 12px;background:var(--accent-soft)}
+.tip.warn{background:var(--warn-soft);color:var(--warn)}
+
+/* Compartir el apartado del firmante */
+.share-mini{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-top:6px}
+.urlbox{font:13.5px/1.3 ui-monospace,"SF Mono",Menlo,Consolas,monospace;background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:10px 12px;overflow-wrap:anywhere;user-select:all;min-width:0;flex:1 1 260px}
+
+/* Plantillas */
+.tpls{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+@media (max-width:900px){.tpls{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media (max-width:560px){.tpls{grid-template-columns:minmax(0,1fr)}}
+.tpl{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:16px 18px;display:flex;flex-direction:column;gap:8px}
+.tpl h3{font-size:17px}
+.tpl p{font-size:14.5px;color:var(--muted)}
+.tpl .who{font-size:13px;font-weight:600;color:var(--accent);margin-top:auto}
+
+/* Preguntas */
+.faq{display:flex;flex-direction:column;gap:10px;max-width:760px}
+details{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:4px 18px}
+summary{cursor:pointer;font-weight:600;padding:14px 0;list-style:none;display:flex;justify-content:space-between;gap:12px}
+summary::-webkit-details-marker{display:none}
+summary::after{content:"+";font:600 20px/1 var(--f-ui);color:var(--accent)}
+details[open] summary::after{content:"−"}
+details p{padding:0 0 16px;color:var(--muted)}
+
+/* Bloque de compartir */
+.sharecard{background:var(--accent);color:var(--accent-ink);border-radius:22px;padding:clamp(22px,4vw,40px);display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:28px;align-items:center}
+@media (max-width:820px){.sharecard{grid-template-columns:minmax(0,1fr)}}
+.sharecard h2{color:var(--accent-ink)}
+.sharecard p{opacity:.9;margin-top:10px}
+.links{display:flex;flex-direction:column;gap:10px;min-width:0}
+.linkrow{background:var(--surface);color:var(--ink);border-radius:14px;padding:12px 14px;display:flex;flex-direction:column;gap:8px;min-width:0}
+.linkrow .lbl{font:600 12px/1 var(--f-ui);letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.linkrow .row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.linkrow .urlbox{border:0;background:var(--bg);padding:8px 10px}
+.btn.sm{min-height:40px;padding:10px 14px;font-size:14px}
+.sharecard .btn.wa{background:var(--surface);color:var(--ink);border-color:transparent}
+footer{padding-block:32px 48px;color:var(--muted);font-size:14px}
+footer .wrap{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:999px;font-size:14px;font-weight:500;z-index:20;max-width:calc(100% - 32px)}
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div class="wrap">
+    <a class="brand" href="#inicio" aria-label="Guía de Firmas MYOB, inicio">
+      <svg viewBox="0 0 32 32" aria-hidden="true"><rect width="32" height="32" rx="9" fill="var(--accent)"/><path d="M8 21c3.5-.5 5-6 7.5-6s1.2 5 3.6 5c1.6 0 2.6-2.4 4.9-3.4" fill="none" stroke="var(--accent-ink)" stroke-width="2.2" stroke-linecap="round"/><path d="M8 24.5h16" stroke="var(--lime)" stroke-width="2" stroke-linecap="round"/></svg>
+      <span>Firmas <small>MYOB · Guía</small></span>
+    </a>
+    <nav class="toc" aria-label="Secciones">
+      <a href="#enviar">Enviar</a>
+      <a href="#firmar">Firmar</a>
+      <a class="opt" href="#plantillas">Plantillas</a>
+      <a class="opt" href="#preguntas">Preguntas</a>
+    </nav>
+  </div>
+</header>
+
+<main id="inicio">
+  <section class="hero">
+    <div class="wrap">
+      <div class="hero-text">
+        <span class="eyebrow">Guía paso a paso</span>
+        <h1>Envía documentos por WhatsApp y recíbelos firmados</h1>
+        <p class="lede">Cartas de recomendación, cartas poder, autorizaciones y más. Tu contacto firma con el dedo desde su celular y tú descargas el documento en PDF o imagen. Sin apps ni cuentas.</p>
+        <div class="btns">
+          <a class="btn primary" href="firma.html" id="openTool">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+            Abrir la herramienta
+          </a>
+          <a class="btn" href="#compartir">Compartir con alguien</a>
+        </div>
+      </div>
+      <div class="sheet" aria-hidden="true">
+        <img src="img/firmas/hoja.webp" width="358" height="963" alt="">
+        <span class="stamp">Firmado desde el celular</span>
+      </div>
+    </div>
+  </section>
+
+  <section class="wrap" aria-label="Cómo funciona">
+    <ol class="flow">
+      <li><span class="n">1</span><div><b>Tú lo preparas</b><span>Eliges la plantilla, llenas los datos y lo envías por WhatsApp.</span></div></li>
+      <li><span class="n">2</span><div><b>Tu contacto lo firma</b><span>Abre el enlace, firma con el dedo y te lo regresa por WhatsApp.</span></div></li>
+      <li><span class="n">3</span><div><b>Tú lo descargas</b><span>Abres el enlace que te llegó y guardas el PDF o la imagen.</span></div></li>
+    </ol>
+  </section>
+
+  <!-- ======== ENVIAR ======== -->
+  <section class="block wrap" id="enviar">
+    <div class="block-head">
+      <span class="role">Para quien envía el documento</span>
+      <h2>Cómo enviar un documento para firma</h2>
+      <p class="muted">Cinco pasos. La primera vez toma unos 3 minutos; después, menos de uno.</p>
+    </div>
+    <ol class="steps">
+      <li class="step">
+        <div class="step-text">
+          <span class="step-num">PASO 1</span>
+          <h3>Elige la plantilla</h3>
+          <p>Abre la herramienta y toca <span class="btnname">Elegir otra plantilla</span>. Escoge el tipo de documento que necesitas.</p>
+          <ul>
+            <li>Recomendación <b>laboral</b> o <b>personal</b></li>
+            <li><b>Carta poder</b>, <b>autorización</b> o <b>responsiva</b></li>
+            <li><b>Documento libre</b> si quieres escribir tu propio texto</li>
+          </ul>
+        </div>
+        <figure class="shot fade" style="margin:0"><img src="img/firmas/plantillas.webp" width="358" height="625" loading="lazy" alt="Lista de plantillas con ejemplos de uso"></figure>
+      </li>
+      <li class="step">
+        <div class="step-text">
+          <span class="step-num">PASO 2</span>
+          <h3>Escribe los datos de quien firma</h3>
+          <p>Nombre completo, cargo u ocupación y su <b>teléfono de WhatsApp</b> (10 dígitos).</p>
+          <ul>
+            <li>El teléfono sirve para enviarle el documento.</li>
+            <li>También aparece en la carta para que puedan llamarle y confirmar la información.</li>
+            <li>Si no quieres que aparezca, desmarca la casilla.</li>
+          </ul>
+        </div>
+        <figure class="shot" style="margin:0"><img src="img/firmas/quien-firma.webp" width="358" height="582" loading="lazy" alt="Formulario con nombre, cargo, empresa y teléfono de quien firma"></figure>
+      </li>
+      <li class="step">
+        <div class="step-text">
+          <span class="step-num">PASO 3</span>
+          <h3>Escribe tus datos y los detalles</h3>
+          <p>Tu nombre y <b>tu WhatsApp</b>: ahí te llega el documento firmado. Después llena los detalles que pide la plantilla (puesto, tiempo, trámite…).</p>
+          <p>El texto se escribe solo. Si quieres cambiar algo, edítalo en <span class="btnname">Texto del documento</span> y revisa la vista previa.</p>
+        </div>
+        <figure class="shot" style="margin:0"><img src="img/firmas/tus-datos.webp" width="358" height="728" loading="lazy" alt="Formulario con tus datos y los detalles del documento"></figure>
+      </li>
+      <li class="step">
+        <div class="step-text">
+          <span class="step-num">PASO 4</span>
+          <h3>Envíalo por WhatsApp</h3>
+          <p>Toca <span class="btnname">Enviar a … por WhatsApp</span>. Se abre WhatsApp con el mensaje y el enlace listos. Solo presiona enviar.</p>
+          <p class="tip">¿Quieres verlo antes como lo verá tu contacto? Toca <b>Ver como firmante</b>.</p>
+        </div>
+        <figure class="shot" style="margin:0"><img src="img/firmas/enviar.webp" width="358" height="484" loading="lazy" alt="Botón verde para enviar por WhatsApp"></figure>
+      </li>
+      <li class="step">
+        <div class="step-text">
+          <span class="step-num">PASO 5</span>
+          <h3>Recíbelo y descárgalo</h3>
+          <p>Cuando tu contacto firme, te llega un enlace por WhatsApp. Ábrelo y toca <span class="btnname">Descargar PDF</span> o <span class="btnname">Descargar imagen</span>.</p>
+          <p class="tip warn">Descárgalo en ese momento. El documento solo existe dentro de ese enlace; si borras el mensaje, se pierde.</p>
+        </div>
+        <figure class="shot" style="margin:0"><img src="img/firmas/descargar.webp" width="358" height="299" loading="lazy" alt="Botones para descargar en PDF o imagen"></figure>
+      </li>
+    </ol>
+  </section>
+
+  <!-- ======== FIRMAR ======== -->
+  <section class="block wrap" id="firmar">
+    <div class="block-head">
+      <span class="role">Para quien firma</span>
+      <h2>Te pidieron firmar un documento</h2>
+      <p class="muted">Cuatro pasos y menos de un minuto. No instalas nada ni creas cuenta.</p>
+      <div class="share-mini">
+        <span class="urlbox" id="signUrl">firma.html</span>
+        <button class="btn sm" type="button" id="copySign">Copiar este apartado</button>
+      </div>
+    </div>
+    <ol class="steps">
+      <li class="step">
+        <div class="step-text">
+          <span class="step-num">PASO 1</span>
+          <h3>Abre el enlace</h3>
+          <p>Tócalo directamente en el chat de WhatsApp. Se abre en el navegador de tu celular con el documento listo para leer.</p>
+        </div>
+        <figure class="shot fade" style="margin:0"><img src="img/firmas/firmar-abrir.webp" width="390" height="664" loading="lazy" alt="Pantalla que abre el firmante con el documento"></figure>
+      </li>
+      <li class="step noimg">
+        <div class="step-text">
+          <span class="step-num">PASO 2</span>
+          <h3>Lee el documento</h3>
+          <p>Revisa nombres, fechas y datos. Si algo está mal, toca <span class="btnname">¿Algo que corregir? Pedir un cambio</span> y escribe qué hay que cambiar. Se abre WhatsApp para avisarle a quien te lo envió.</p>
+        </div>
+      </li>
+      <li class="step">
+        <div class="step-text">
+          <span class="step-num">PASO 3</span>
+          <h3>Firma con tu dedo</h3>
+          <ul>
+            <li>Firma dentro del recuadro blanco. Si no te gustó, toca <b>Borrar firma</b>.</li>
+            <li>Revisa que tu nombre esté bien escrito.</li>
+            <li>Marca <b>Leí el documento y lo firmo</b>.</li>
+            <li>Toca <span class="btnname">Firmar documento</span>.</li>
+          </ul>
+          <p class="tip">Si necesitas más espacio, gira el celular.</p>
+        </div>
+        <figure class="shot" style="margin:0"><img src="img/firmas/firmar-pad.webp" width="358" height="613" loading="lazy" alt="Recuadro para firmar con el dedo y botón Firmar documento"></figure>
+      </li>
+      <li class="step">
+        <div class="step-text">
+          <span class="step-num">PASO 4</span>
+          <h3>Devuélvelo por WhatsApp</h3>
+          <p>Toca <span class="btnname">Enviar a … por WhatsApp</span>. Se abre el chat con el mensaje listo; presiona enviar. Listo.</p>
+          <p class="muted">Si quieres quedarte con una copia, toca <b>Guardar copia (imagen)</b>.</p>
+        </div>
+        <figure class="shot" style="margin:0"><img src="img/firmas/firmar-devolver.webp" width="358" height="338" loading="lazy" alt="Botón para devolver el documento firmado por WhatsApp"></figure>
+      </li>
+    </ol>
+  </section>
+
+  <!-- ======== PLANTILLAS ======== -->
+  <section class="block wrap" id="plantillas">
+    <div class="block-head">
+      <span class="eyebrow">Plantillas incluidas</span>
+      <h2>¿Qué documento elijo?</h2>
+    </div>
+    <div class="tpls">
+      <article class="tpl"><h3>Recomendación laboral</h3><p>Vacantes, cambio de empleo, prácticas profesionales o una promoción.</p><span class="who">Firma: tu exjefe, supervisor o compañero</span></article>
+      <article class="tpl"><h3>Recomendación personal</h3><p>Rentar una casa, becas, trámites escolares, ingreso a un club o asociación.</p><span class="who">Firma: un amigo, vecino o conocido</span></article>
+      <article class="tpl"><h3>Carta poder simple</h3><p>Hacer un trámite en nombre de otra persona: recoger documentos, CFE, SAT, IMSS, banco o escuela.</p><span class="who">Firma: quien te da el poder</span></article>
+      <article class="tpl"><h3>Carta de autorización</h3><p>Recoger un paquete o pedido, recibir correspondencia en un domicilio, usar una fotografía.</p><span class="who">Firma: quien da el permiso</span></article>
+      <article class="tpl"><h3>Carta responsiva</h3><p>Préstamo de equipo o herramienta, venta de un vehículo o artículo, uso de un espacio.</p><span class="who">Firma: quien recibe y se hace responsable</span></article>
+      <article class="tpl"><h3>Documento libre</h3><p>Constancias, cartas de no adeudo, acuerdos sencillos o agradecimientos. Tú escribes el texto.</p><span class="who">Firma: quien tú elijas</span></article>
+    </div>
+  </section>
+
+  <!-- ======== PREGUNTAS ======== -->
+  <section class="block wrap" id="preguntas">
+    <div class="block-head">
+      <span class="eyebrow">Preguntas frecuentes</span>
+      <h2>Lo que más preguntan</h2>
+    </div>
+    <div class="faq">
+      <details><summary>¿Necesito instalar algo o crear una cuenta?</summary><p>No. Funciona en el navegador del celular o de la computadora. En computadora se firma con el mouse.</p></details>
+      <details><summary>¿Dónde se guardan los documentos?</summary><p>En ningún servidor. El texto y la firma viajan dentro del enlace de WhatsApp. Por eso conviene descargar el PDF en cuanto lo recibas.</p></details>
+      <details><summary>¿Tiene validez legal?</summary><p>Es una firma electrónica simple: sirve para cartas de recomendación, autorizaciones y acuerdos sencillos entre particulares. No sustituye la e.firma del SAT ni una firma ante notario. Para una carta poder, algunas oficinas piden además dos testigos y copia de identificación.</p></details>
+      <details><summary>¿Qué son el folio y la huella del pie de página?</summary><p>El folio identifica el documento. La huella es un código que cambia si cambia el texto. Si envías y recibes desde el mismo celular y navegador, la herramienta te confirma que el texto firmado es idéntico al que enviaste.</p></details>
+      <details><summary>El enlace no abre o dice que está incompleto</summary><p>Ábrelo tocándolo directamente en WhatsApp, sin copiar solo una parte. Si sigue fallando, pide que te lo reenvíen.</p></details>
+      <details><summary>¿Cómo lo imprimo?</summary><p>Descarga el PDF e imprímelo. Sale en tamaño carta (21.6 × 27.9 cm).</p></details>
+    </div>
+  </section>
+
+  <!-- ======== COMPARTIR ======== -->
+  <section class="block wrap" id="compartir">
+    <div class="sharecard">
+      <div>
+        <h2>Comparte la herramienta y esta guía</h2>
+        <p>Manda los dos enlaces juntos por WhatsApp a quien quiera enviar sus propios documentos para firma.</p>
+        <div class="btns" style="margin-top:18px">
+          <a class="btn wa" id="shareWa" href="https://wa.me/" target="_blank" rel="noopener">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 11.5a8.4 8.4 0 0 1-12.4 7.4L3 21l2.1-5.4A8.4 8.4 0 1 1 21 11.5z"/></svg>
+            Compartir por WhatsApp
+          </a>
+          <button class="btn wa" type="button" id="shareNative" hidden>Más opciones…</button>
+        </div>
+      </div>
+      <div class="links">
+        <div class="linkrow"><span class="lbl">Herramienta</span><div class="row"><span class="urlbox" id="urlTool">firma.html</span><button class="btn sm" type="button" data-copy="urlTool">Copiar</button></div></div>
+        <div class="linkrow"><span class="lbl">Guía</span><div class="row"><span class="urlbox" id="urlGuide">guia-firmas.html</span><button class="btn sm" type="button" data-copy="urlGuide">Copiar</button></div></div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="wrap">
+    <span>Firmas MYOB · MYOB Intelligence</span>
+    <a href="firma.html">Abrir la herramienta</a>
+  </div>
+</footer>
+
+<div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
+
+<script>
+(() => {
+  const $ = (s) => document.querySelector(s);
+  const base = location.href.split('#')[0].replace(/[^/]*$/, '');
+  const tool = base + 'firma.html', guide = base + 'guia-firmas.html';
+  $('#urlTool').textContent = tool; $('#urlGuide').textContent = guide; $('#signUrl').textContent = guide + '#firmar';
+  const text = `Te comparto Firmas MYOB: sirve para enviar cartas y documentos por WhatsApp y recibirlos firmados desde el celular, sin apps ni cuentas.\n\nHerramienta: ${tool}\nGuía paso a paso: ${guide}`;
+  $('#shareWa').href = 'https://wa.me/?text=' + encodeURIComponent(text);
+  let t;
+  const toast = (m) => { const el = $('#toast'); el.textContent = m; el.hidden = false; clearTimeout(t); t = setTimeout(() => el.hidden = true, 2400); };
+  async function copy(s) {
+    try { await navigator.clipboard.writeText(s); toast('Enlace copiado'); }
+    catch (e) { const ta = document.createElement('textarea'); ta.value = s; ta.style.position = 'fixed'; ta.style.opacity = '0'; document.body.append(ta); ta.select(); try { document.execCommand('copy'); toast('Enlace copiado'); } catch (e2) { toast('Mantén presionado el enlace para copiarlo'); } ta.remove(); }
+  }
+  document.querySelectorAll('[data-copy]').forEach((b) => b.addEventListener('click', () => copy($('#' + b.dataset.copy).textContent)));
+  $('#copySign').addEventListener('click', () => copy(guide + '#firmar'));
+  if (navigator.share) {
+    const b = $('#shareNative'); b.hidden = false;
+    b.addEventListener('click', async () => { try { await navigator.share({ title: 'Firmas MYOB', text: 'Envía documentos por WhatsApp y recíbelos firmados.', url: guide }); } catch (e) {} });
+  }
+})();
+</script>
+</body>
+</html>

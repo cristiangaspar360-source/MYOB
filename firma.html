@@ -4,8 +4,8 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Firmas MYOB</title>
-<meta name="description" content="Crea una carta, envíala por WhatsApp, que la firmen con el dedo y recíbela lista para PDF o imagen.">
-<meta property="og:title" content="Carta para firmar">
+<meta name="description" content="Crea cartas y documentos, envíalos por WhatsApp, que los firmen con el dedo y recíbelos listos para PDF o imagen.">
+<meta property="og:title" content="Documento para firmar">
 <meta property="og:description" content="Revísala y fírmala desde tu celular en un minuto. Sin apps ni cuentas.">
 <meta name="theme-color" content="#13704A">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -135,6 +135,22 @@ input:focus-visible,textarea:focus-visible,button:focus-visible,a:focus-visible{
 .list a{color:var(--accent);font-weight:600;text-decoration:none}
 .toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:999px;font-size:14px;font-weight:500;z-index:20;max-width:calc(100% - 32px)}
 .done-box{display:flex;flex-direction:column;gap:10px}
+
+/* Selector de plantillas */
+.tpl-head{display:flex;flex-wrap:wrap;gap:12px;align-items:center;justify-content:space-between}
+.tpl-now{display:flex;flex-direction:column;gap:3px;min-width:0;flex:1 1 220px}
+.tpl-now strong{font:700 18px/1.2 var(--f-display);letter-spacing:-.01em}
+.eyebrow{font:600 11px/1 var(--f-ui);letter-spacing:.08em;text-transform:uppercase;color:var(--accent)}
+.tpl-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+@media (max-width:520px){.tpl-grid{grid-template-columns:minmax(0,1fr)}}
+.tpl-opt{display:flex;flex-direction:column;gap:6px;text-align:left;font:inherit;color:var(--ink);background:var(--bg);border:1.5px solid var(--line);border-radius:12px;padding:12px 14px;cursor:pointer;min-width:0}
+.tpl-opt:hover{border-color:var(--muted)}
+.tpl-opt[aria-pressed=true]{border-color:var(--accent);background:var(--accent-soft)}
+.tpl-opt b{font:600 15px/1.25 var(--f-ui)}
+.tpl-opt .ex{font-size:13px;color:var(--muted);line-height:1.4}
+.tpl-opt .who{font-size:12px;color:var(--accent);font-weight:600}
+.tpl-tip{grid-column:1/-1}
+.dyn{display:contents}
 .done-box h2{color:var(--accent)}
 @media (prefers-reduced-motion:no-preference){.btn{transition:filter .15s,border-color .15s}}
 </style>
@@ -147,38 +163,51 @@ input:focus-visible,textarea:focus-visible,button:focus-visible,a:focus-visible{
       <svg viewBox="0 0 32 32" aria-hidden="true"><rect width="32" height="32" rx="9" fill="var(--accent)"/><path d="M8 21c3.5-.5 5-6 7.5-6s1.2 5 3.6 5c1.6 0 2.6-2.4 4.9-3.4" fill="none" stroke="var(--accent-ink)" stroke-width="2.2" stroke-linecap="round"/><path d="M8 24.5h16" stroke="var(--lime)" stroke-width="2" stroke-linecap="round"/></svg>
       <span>Firmas <small>MYOB</small></span>
     </a>
-    <a class="toplink" href="#" id="toEditor" hidden>Crear una carta</a>
+    <a class="toplink" href="#" id="toEditor" hidden>Crear un documento</a>
   </div>
 </header>
 
 <main>
   <!-- ============ VISTA 1: EDITOR (tú) ============ -->
   <section id="vEditor" class="wrap" hidden>
-    <h1>Carta de recomendación para firmar</h1>
-    <p class="lede">Llena los datos, revisa la hoja y envíala por WhatsApp. Tu contacto la firma con el dedo y te la regresa; tú la descargas en PDF o imagen.</p>
+    <h1>Documentos para firmar por WhatsApp</h1>
+    <p class="lede">Elige una plantilla, llena los datos y envíala por WhatsApp. Tu contacto la firma con el dedo y te la regresa; tú la descargas en PDF o imagen.</p>
 
     <div class="grid">
       <div class="col">
+        <div class="card tpl-card">
+          <div class="tpl-head">
+            <div class="tpl-now">
+              <span class="eyebrow">Plantilla</span>
+              <strong id="tplName">Carta de recomendación laboral</strong>
+              <span class="small muted" id="tplUse"></span>
+            </div>
+            <button class="btn" id="tplBtn" type="button" aria-expanded="false" aria-controls="tplPanel">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 8h8M8 12h8M8 16h5"/></svg>
+              Elegir otra plantilla
+            </button>
+          </div>
+          <div id="tplPanel" class="tpl-grid" hidden></div>
+        </div>
+
         <div class="card">
-          <h2><span class="step">1</span> Quién firma la carta</h2>
+          <h2><span class="step">1</span> <span id="signerTitle">Quién firma</span></h2>
           <div class="fields">
             <label class="f">Nombre completo<input type="text" id="f_name" autocomplete="off"></label>
-            <label class="f">Cargo<input type="text" id="f_cargo" autocomplete="off"></label>
-            <label class="f">Empresa<input type="text" id="f_emp" autocomplete="off"></label>
-            <label class="f">Contacto en la carta <span class="hint">Teléfono o correo (opcional)</span><input type="text" id="f_contacto" autocomplete="off"></label>
-            <label class="f full">WhatsApp de quien firma <span class="hint">10 dígitos. Si lo dejas vacío, WhatsApp te deja elegir el contacto.</span><input type="tel" id="f_wa" inputmode="tel" autocomplete="off" placeholder="33 1234 5678"></label>
+            <label class="f" id="wrap_cargo"><span id="lbl_cargo">Cargo</span><input type="text" id="f_cargo" autocomplete="off"></label>
+            <label class="f" id="wrap_emp"><span id="lbl_emp">Empresa</span><input type="text" id="f_emp" autocomplete="off"></label>
+            <label class="f">Correo <span class="hint">Opcional, aparece en el documento</span><input type="text" id="f_contacto" inputmode="email" autocomplete="off"></label>
+            <label class="f full">Teléfono / WhatsApp de quien firma <span class="hint">10 dígitos. Se usa para enviarle el documento y para que puedan comunicarse con esta persona.</span><input type="tel" id="f_wa" inputmode="tel" autocomplete="off" placeholder="33 1234 5678"></label>
+            <label class="check full"><input type="checkbox" id="f_showtel" checked><span id="showtelLbl">Poner este teléfono en el documento para que puedan llamarle y confirmar la información.</span></label>
           </div>
         </div>
 
         <div class="card">
-          <h2><span class="step">2</span> Sobre ti y el puesto</h2>
+          <h2><span class="step">2</span> <span id="detailsTitle">Sobre ti y el documento</span></h2>
           <div class="fields">
-            <label class="f">Tu nombre completo<input type="text" id="me_name" autocomplete="name"></label>
-            <label class="f">Tu WhatsApp <span class="hint">Aquí te llega la carta firmada</span><input type="tel" id="me_wa" inputmode="tel" autocomplete="tel" placeholder="33 1234 5678"></label>
-            <label class="f">Qué fue de ti<input type="text" id="rel" placeholder="jefa directa"></label>
-            <label class="f">Por cuánto tiempo<input type="text" id="tiempo" placeholder="4 años"></label>
-            <label class="f full">Puesto al que aplicas<input type="text" id="puesto"></label>
-            <label class="f full">Lo que destaca de ti<input type="text" id="cual"></label>
+            <label class="f"><span id="lbl_me">Tu nombre completo</span><input type="text" id="me_name" autocomplete="name"></label>
+            <label class="f">Tu WhatsApp <span class="hint">Aquí te llega el documento firmado</span><input type="tel" id="me_wa" inputmode="tel" autocomplete="tel" placeholder="33 1234 5678"></label>
+            <div id="tplFields" class="dyn"></div>
             <label class="f">Lugar<input type="text" id="lugar"></label>
             <label class="f">Dirigida a<input type="text" id="dest"></label>
           </div>
@@ -186,7 +215,7 @@ input:focus-visible,textarea:focus-visible,button:focus-visible,a:focus-visible{
 
         <div class="card">
           <div class="row between">
-            <h2><span class="step">3</span> Texto de la carta</h2>
+            <h2><span class="step">3</span> Texto del documento</h2>
             <button class="btn ghost" id="resetBody" hidden type="button">Volver a la plantilla</button>
           </div>
           <p class="small muted" style="margin:0" id="bodyHint">Se escribe solo con los datos de arriba. Puedes editarlo libremente; deja una línea en blanco entre párrafos.</p>
@@ -204,13 +233,13 @@ input:focus-visible,textarea:focus-visible,button:focus-visible,a:focus-visible{
           <div class="row">
             <button class="btn" id="copyBtn" type="button">Copiar enlace</button>
             <a class="btn" id="testBtn" href="#" target="_blank" rel="noopener">Ver como firmante</a>
-            <button class="btn ghost" id="newBtn" type="button">Nueva carta</button>
+            <button class="btn ghost" id="newBtn" type="button">Nuevo documento</button>
           </div>
           <p class="small muted" style="margin:0">Folio <span class="mono" id="folioOut"></span> · El texto viaja dentro del enlace; no se guarda en ningún servidor.</p>
         </div>
 
         <div class="card" id="recCard" hidden>
-          <h2>Cartas firmadas que has abierto aquí</h2>
+          <h2>Documentos firmados que has abierto aquí</h2>
           <ul class="list" id="recList"></ul>
         </div>
       </div>
@@ -229,15 +258,15 @@ input:focus-visible,textarea:focus-visible,button:focus-visible,a:focus-visible{
     <div class="hero-sign">
       <div class="dot" id="sgInitial">C</div>
       <div>
-        <h1 id="sgTitle">Te pidieron firmar una carta</h1>
-        <p class="lede" style="margin-top:6px">Léela, firma con tu dedo y devuélvela por WhatsApp. Toma un minuto; no necesitas instalar nada ni crear cuenta.</p>
+        <h1 id="sgTitle">Te pidieron firmar un documento</h1>
+        <p class="lede" style="margin-top:6px">Léelo, firma con tu dedo y devuélvelo por WhatsApp. Toma un minuto; no necesitas instalar nada ni crear cuenta.</p>
       </div>
     </div>
 
     <div class="grid">
       <div class="col">
         <div class="sheet-wrap">
-          <div class="sheet-label"><span>La carta</span><span class="mono" id="sgFolio"></span></div>
+          <div class="sheet-label"><span>El documento</span><span class="mono" id="sgFolio"></span></div>
           <div class="paper" id="sgPaper"></div>
         </div>
       </div>
@@ -254,8 +283,8 @@ input:focus-visible,textarea:focus-visible,button:focus-visible,a:focus-visible{
             <span class="small muted">Gira el celular si necesitas más espacio</span>
           </div>
           <label class="f">Tu nombre<input type="text" id="sgName" autocomplete="name"></label>
-          <label class="check"><input type="checkbox" id="sgOk"><span>Leí la carta y la firmo de forma electrónica.</span></label>
-          <button class="btn primary block" id="sgSign" type="button" disabled>Firmar carta</button>
+          <label class="check"><input type="checkbox" id="sgOk"><span>Leí el documento y lo firmo de forma electrónica.</span></label>
+          <button class="btn primary block" id="sgSign" type="button" disabled>Firmar documento</button>
           <a class="btn ghost" id="sgChange" href="#" target="_blank" rel="noopener">¿Algo que corregir? Pedir un cambio</a>
         </div>
 
@@ -278,7 +307,7 @@ input:focus-visible,textarea:focus-visible,button:focus-visible,a:focus-visible{
 
   <!-- ============ VISTA 3: FIRMADA (tú la recibes) ============ -->
   <section id="vSigned" class="wrap" hidden>
-    <h1 id="snTitle">Carta firmada</h1>
+    <h1 id="snTitle">Documento firmado</h1>
     <p class="lede" id="snSub"></p>
     <div class="row" style="margin-top:12px" id="snChips"></div>
 
@@ -314,7 +343,7 @@ input:focus-visible,textarea:focus-visible,button:focus-visible,a:focus-visible{
     <div class="card" style="max-width:560px;margin:40px auto">
       <h2>Este enlace no se pudo abrir</h2>
       <p class="small" style="margin:0" id="errTxt">Parece incompleto. Pide que te lo reenvíen y ábrelo tocándolo directamente en WhatsApp.</p>
-      <a class="btn" href="#" id="errHome">Crear una carta nueva</a>
+      <a class="btn" href="#" id="errHome">Crear un documento nuevo</a>
     </div>
   </section>
 </main>
@@ -392,22 +421,106 @@ async function huella(doc) {
   hex = hex.toUpperCase(); return hex.slice(0, 4) + '-' + hex.slice(4, 8);
 }
 
-/* ---------- plantilla ---------- */
-const EJEMPLO = {
-  me_name: 'Cristian', me_wa: '', f_name: 'Laura Méndez Ruiz', f_cargo: 'Gerente de Operaciones de Almacén', f_emp: 'Flex Guadalajara',
-  f_contacto: '', f_wa: '', rel: 'jefa directa', tiempo: 'cuatro años', puesto: 'Especialista SAP WM',
-  cual: 'su dominio de SAP WM, el control de inventarios y la automatización de procesos que redujeron tiempos y errores en el almacén',
-  lugar: 'Guadalajara, Jalisco', dest: 'A quien corresponda'
-};
-function plantilla(v) {
-  const n = v.me_name || '[tu nombre]';
-  return [
-    `Por medio de la presente, me permito recomendar ampliamente a ${n}, a quien conozco desde hace ${v.tiempo || '[tiempo]'}, periodo en el que fui su ${v.rel || '[relación]'} en ${v.f_emp || '[empresa]'}.`,
-    `Durante este tiempo, ${firstName(n)} se distinguió por ${v.cual || '[cualidades]'}. Es una persona responsable, honesta y comprometida con los resultados, que trabaja bien en equipo y resuelve problemas con iniciativa.`,
-    `Por lo anterior, considero que ${firstName(n)} es un candidato idóneo para el puesto de ${v.puesto || '[puesto]'} y no tengo duda de que será un elemento valioso para su organización.`,
-    `Se extiende la presente a petición del interesado para los fines que a este convengan. Quedo a sus órdenes para cualquier información adicional.`
-  ].join('\n\n');
+/* ---------- plantillas ---------- */
+function fmtTel(s) { let d = digits(s); if (d.length === 12 && d.startsWith('52')) d = d.slice(2); if (d.length === 13 && d.startsWith('521')) d = d.slice(3); if (d.length === 10) return d.slice(0, 2) + ' ' + d.slice(2, 6) + ' ' + d.slice(6); return (s || '').trim(); }
+// Frase de contacto que se integra al cuerpo cuando hay teléfono (y/o correo)
+function contactoFrase(c) {
+  if (c.tel && c.mail) return ` al teléfono ${c.tel} o al correo ${c.mail}`;
+  if (c.tel) return ` al teléfono ${c.tel}`;
+  if (c.mail) return ` al correo ${c.mail}`;
+  return '';
 }
+const COMUNES = { me_name: 'Cristian', me_wa: '', f_contacto: '', f_wa: '33 1234 5678', f_showtel: true, lugar: 'Guadalajara, Jalisco', dest: 'A quien corresponda' };
+const TEMPLATES = [
+  { id: 'laboral', nombre: 'Carta de recomendación laboral', corto: 'la carta de recomendación', asunto: 'Carta de recomendación laboral',
+    uso: 'Vacantes, cambio de empleo, prácticas profesionales o una promoción.', firma: 'Tu exjefe, supervisor o compañero de trabajo.',
+    firmante: 'Quién te recomienda', yo: 'Tu nombre completo', l2: 'Cargo', l3: 'Empresa', rol: '',
+    campos: [
+      { id: 'rel', label: 'Qué fue de ti', ph: 'jefa directa' },
+      { id: 'tiempo', label: 'Por cuánto tiempo', ph: 'cuatro años' },
+      { id: 'puesto', label: 'Puesto al que aplicas', ph: 'Especialista SAP WM', full: true },
+      { id: 'cual', label: 'Lo que destaca de ti', ph: 'su dominio de SAP WM y el control de inventarios', full: true }],
+    ejemplo: { f_name: 'Laura Méndez Ruiz', f_cargo: 'Gerente de Operaciones de Almacén', f_emp: 'Flex Guadalajara', rel: 'jefa directa', tiempo: 'cuatro años', puesto: 'Especialista SAP WM',
+      cual: 'su dominio de SAP WM, el control de inventarios y la automatización de procesos que redujeron tiempos y errores en el almacén' },
+    cuerpo: (v, c) => [
+      `Por medio de la presente, me permito recomendar ampliamente a ${c.n}, a quien conozco desde hace ${v.tiempo || '[tiempo]'}, periodo en el que fui su ${v.rel || '[relación]'} en ${v.f_emp || '[empresa]'}.`,
+      `Durante este tiempo, ${c.first} se distinguió por ${v.cual || '[cualidades]'}. Es una persona responsable, honesta y comprometida con los resultados, que trabaja bien en equipo y resuelve problemas con iniciativa.`,
+      `Por lo anterior, considero que ${c.first} es la persona idónea para el puesto de ${v.puesto || '[puesto]'} y no tengo duda de que será un elemento valioso para su organización.`,
+      `Se extiende la presente a petición del interesado para los fines que a este convengan. Quedo a sus órdenes para confirmar esta información o ampliarla${contactoFrase(c)}.`] },
+
+  { id: 'personal', nombre: 'Carta de recomendación personal', corto: 'la carta de recomendación', asunto: 'Carta de recomendación personal',
+    uso: 'Rentar una casa, becas, trámites escolares, ingreso a un club o asociación.', firma: 'Un amigo, vecino o conocido de confianza.',
+    firmante: 'Quién te recomienda', yo: 'Tu nombre completo', l2: 'Ocupación', l3: 'Domicilio o ciudad', rol: '',
+    campos: [
+      { id: 'p_rel', label: 'Cómo te conoce', ph: 'vecino, amigo de la familia' },
+      { id: 'p_tiempo', label: 'Desde hace cuánto', ph: 'diez años' },
+      { id: 'p_motivo', label: 'Para qué la necesitas', ph: 'el arrendamiento de una vivienda', full: true },
+      { id: 'p_cual', label: 'Cómo eres como persona', ph: 'honesta, responsable y respetuosa', full: true }],
+    ejemplo: { f_name: 'Roberto Hernández Gómez', f_cargo: 'Comerciante', f_emp: 'Villa Corona, Jalisco', p_rel: 'vecino', p_tiempo: 'diez años', p_motivo: 'el arrendamiento de una vivienda',
+      p_cual: 'honesta, responsable y respetuosa, que cumple con sus compromisos y mantiene una buena convivencia con quienes le rodean' },
+    cuerpo: (v, c) => [
+      `Por medio de la presente, hago constar que conozco a ${c.n} desde hace ${v.p_tiempo || '[tiempo]'}, en calidad de ${v.p_rel || '[relación]'}.`,
+      `Durante este tiempo he podido constatar que ${c.first} es una persona ${v.p_cual || '[cualidades]'}.`,
+      `Por ello, extiendo mi más amplia recomendación para ${v.p_motivo || '[motivo]'}, con la confianza de que sabrá corresponder.`,
+      `Se extiende la presente a petición del interesado para los fines que a este convengan. Quedo a sus órdenes para cualquier aclaración${contactoFrase(c)}.`] },
+
+  { id: 'poder', nombre: 'Carta poder simple', corto: 'la carta poder', asunto: 'Carta poder simple',
+    uso: 'Que hagas un trámite en nombre de otra persona: recoger documentos, CFE, SAT, IMSS, banco o escuela.', firma: 'La persona que te da el poder.',
+    tip: 'Algunas oficinas piden además la firma de dos testigos y copia de identificación. Pregunta antes de ir.',
+    firmante: 'Quién te da el poder', yo: 'Tu nombre completo (recibes el poder)', l2: 'Domicilio', l3: '', rol: 'Otorgante',
+    campos: [
+      { id: 'pd_tramite', label: 'Qué trámite harás', ph: 'recoger mi estado de cuenta y aclarar mi saldo', full: true },
+      { id: 'pd_ante', label: 'Ante quién', ph: 'la Comisión Federal de Electricidad (CFE)', full: true }],
+    ejemplo: { f_name: 'María Elena Ruiz Flores', f_cargo: 'Villa Corona, Jalisco', f_emp: '', pd_tramite: 'realice el cambio de titular del contrato de luz de mi domicilio y reciba la documentación correspondiente', pd_ante: 'la Comisión Federal de Electricidad (CFE)' },
+    cuerpo: (v, c) => [
+      `Por medio de la presente, yo, ${c.quien}, otorgo poder amplio y suficiente a ${c.n} para que en mi nombre y representación ${v.pd_tramite || '[trámite]'} ante ${v.pd_ante || '[institución]'}.`,
+      `Asimismo, le faculto para firmar los documentos, recibir notificaciones y realizar las gestiones necesarias relacionadas con dicho trámite, y reconozco como válidos los actos que realice con base en esta carta.`,
+      `Para confirmar esta autorización, pueden comunicarse conmigo${contactoFrase(c) || ' en cualquier momento'}.`] },
+
+  { id: 'autorizacion', nombre: 'Carta de autorización', corto: 'la carta de autorización', asunto: 'Carta de autorización',
+    uso: 'Recoger un paquete o pedido, usar un domicilio para recibir correspondencia, usar una fotografía o un espacio.', firma: 'Quien da el permiso.',
+    firmante: 'Quién autoriza', yo: 'Tu nombre completo (a quien autorizan)', l2: 'Domicilio', l3: '', rol: 'Quien autoriza',
+    campos: [
+      { id: 'au_accion', label: 'Qué te autorizan', ph: 'recoger en mi nombre el paquete con número de guía 1234567890', full: true },
+      { id: 'au_vig', label: 'Vigencia', ph: 'hasta el 30 de noviembre de 2026', full: true }],
+    ejemplo: { f_name: 'Jorge Ramírez Torres', f_cargo: 'Av. Hidalgo 45, Villa Corona, Jalisco', f_emp: '', au_accion: 'recoja en mi nombre el paquete con número de guía 1234567890 en la sucursal de paquetería de Villa Corona', au_vig: 'hasta el 30 de noviembre de 2026' },
+    cuerpo: (v, c) => [
+      `Por medio de la presente, yo, ${c.quien}, autorizo a ${c.n} para que ${v.au_accion || '[acción autorizada]'}.`,
+      `Esta autorización es válida a partir de la fecha de firma y ${v.au_vig || '[vigencia]'}.`,
+      `Para verificar esta autorización, pueden comunicarse conmigo${contactoFrase(c) || ' en cualquier momento'}.`] },
+
+  { id: 'responsiva', nombre: 'Carta responsiva', corto: 'la carta responsiva', asunto: 'Carta responsiva',
+    uso: 'Préstamo de equipo o herramienta, venta de un vehículo o artículo, uso de un espacio o mueble.', firma: 'Quien recibe y se hace responsable.',
+    firmante: 'Quién se hace responsable', yo: 'Tu nombre completo (dueño de lo que se entrega)', l2: 'Domicilio', l3: '', rol: 'Responsable',
+    campos: [
+      { id: 'rs_obj', label: 'Qué recibe', ph: 'una laptop Lenovo ThinkPad E14, número de serie PF3XYZ', full: true },
+      { id: 'rs_motivo', label: 'En calidad de', ph: 'préstamo', full: false },
+      { id: 'rs_comp', label: 'A qué se compromete', ph: 'devolverla en las mismas condiciones a más tardar el 30 de noviembre de 2026', full: true }],
+    ejemplo: { f_name: 'Daniel Ortiz Navarro', f_cargo: 'Guadalajara, Jalisco', f_emp: '', rs_obj: 'una laptop Lenovo ThinkPad E14 con cargador, número de serie PF3XYZ', rs_motivo: 'préstamo',
+      rs_comp: 'devolverla en las mismas condiciones a más tardar el 30 de noviembre de 2026 y cubrir cualquier daño ocasionado por mal uso' },
+    cuerpo: (v, c) => [
+      `Por medio de la presente, yo, ${c.quien}, hago constar que recibo de ${c.n} ${v.rs_obj || '[lo que se entrega]'}, en calidad de ${v.rs_motivo || '[préstamo, venta…]'}.`,
+      `Me comprometo a ${v.rs_comp || '[compromiso]'}. A partir de la fecha de firma, asumo la responsabilidad total sobre su uso y resguardo.`,
+      `Para cualquier aclaración, pueden comunicarse conmigo${contactoFrase(c) || ' en cualquier momento'}.`] },
+
+  { id: 'libre', nombre: 'Documento libre', corto: 'el documento', asunto: '',
+    uso: 'Constancias, cartas de no adeudo, acuerdos sencillos o agradecimientos. Tú escribes el texto.', firma: 'Quien tú elijas.',
+    firmante: 'Quién firma', yo: 'Tu nombre completo', l2: 'Cargo u ocupación', l3: 'Empresa o domicilio', rol: '',
+    campos: [{ id: 'lb_asunto', label: 'Asunto del documento', ph: 'Constancia de no adeudo', full: true }],
+    ejemplo: { f_name: 'Ana Sofía Lara Vega', f_cargo: 'Propietaria', f_emp: 'Papelería La Esquina', lb_asunto: 'Constancia de no adeudo' },
+    cuerpo: (v, c) => [
+      `Por medio de la presente, hago constar que ${c.n} [escribe aquí lo que se hace constar].`,
+      `Se extiende la presente a petición del interesado para los fines que a este convengan. Quedo a sus órdenes${contactoFrase(c)}.`] }
+];
+const tplById = (id) => TEMPLATES.find((t) => t.id === id) || TEMPLATES[0];
+function ctxDe(v) {
+  const n = (v.me_name || '').trim() || '[tu nombre]';
+  return { n, first: firstName(n) || n, quien: (v.f_name || '').trim() || '[nombre de quien firma]',
+    tel: v.f_showtel !== false ? fmtTel(v.f_wa) : '', mail: (v.f_contacto || '').trim() };
+}
+function plantilla(v, T) { return T.cuerpo(v, ctxDe(v)).join('\n\n'); }
+// Líneas bajo la firma (compatibles con enlaces anteriores)
+function sigLines(doc) { return [doc.rol, doc.f.cargo, doc.f.emp, doc.f.tel ? 'Tel. ' + doc.f.tel : '', doc.f.contacto].filter(Boolean); }
 
 /* ---------- firma: codificación de trazos ---------- */
 // sig = { w:600, h:int, p:[[x0,y0,dx,dy,...], ...] }
@@ -452,7 +565,7 @@ function renderPaper(target, doc, signed) {
   if (signed) box.append(el('img', { src: sigImage(signed.s), alt: 'Firma de ' + doc.f.n }));
   else box.append(el('span', { class: 'p-pending', text: 'Firma pendiente' }));
   sign.append(box, el('div', { class: 'p-line' }), el('strong', { text: doc.f.n }));
-  for (const l of [doc.f.cargo, doc.f.emp, doc.f.contacto]) if (l) sign.append(el('span', { text: l }));
+  for (const l of sigLines(doc)) sign.append(el('span', { text: l }));
   target.append(sign);
   if (signed) target.append(P('p-foot', `Firmado electrónicamente por ${signed.s.n} el ${fechaHora(signed.s.ts)}. Folio ${doc.id} · Huella del texto ${signed.s.h}.`));
 }
@@ -499,7 +612,7 @@ function layout(ctx, doc, signed, fs, draw) {
   y += sigH + 4;
   if (draw) { ctx.strokeStyle = '#333'; ctx.lineWidth = 1.4; ctx.beginPath(); ctx.moveTo(cx - 230, y); ctx.lineTo(cx + 230, y); ctx.stroke(); }
   y += lh; font(600, fs); text(doc.f.n, cx, 'center'); y += Math.round(lh * 0.92);
-  font(400, fs); for (const l of [doc.f.cargo, doc.f.emp, doc.f.contacto]) if (l) { text(l, cx, 'center'); y += Math.round(lh * 0.92); }
+  font(400, fs); for (const l of sigLines(doc)) { text(l, cx, 'center'); y += Math.round(lh * 0.92); }
   const bodyEnd = y;
   if (signed) {
     font(400, 15, SANS); ctx.fillStyle = '#666';
@@ -522,42 +635,104 @@ function saveBlob(blob, name) {
   const url = URL.createObjectURL(blob); const a = el('a', { href: url, download: name }); document.body.append(a); a.click(); a.remove();
   setTimeout(() => URL.revokeObjectURL(url), 4000);
 }
-async function exportPNG(doc, signed) { const c = await renderSheet(doc, signed, 2); saveBlob(await canvasBlob(c, 'image/png'), `Carta-recomendacion-${fileSafe(doc.f.n)}-${doc.id}.png`); }
+const fileName = (doc) => `${fileSafe(doc.tipo || 'Carta de recomendacion')}-${fileSafe(doc.f.n)}-${doc.id}`;
+async function exportPNG(doc, signed) { const c = await renderSheet(doc, signed, 2); saveBlob(await canvasBlob(c, 'image/png'), `${fileName(doc)}.png`); }
 async function exportPDF(doc, signed) {
   if (!window.jspdf) { toast('No cargó el generador de PDF; revisa tu conexión'); return; }
   const c = await renderSheet(doc, signed, 2);
   const pdf = new window.jspdf.jsPDF({ unit: 'pt', format: 'letter', compress: true });
-  pdf.setProperties({ title: 'Carta de recomendación — ' + doc.f.n, subject: 'Folio ' + doc.id + ' · Huella ' + (signed ? signed.s.h : ''), creator: 'Firmas MYOB' });
+  pdf.setProperties({ title: (doc.tipo || 'Carta de recomendación') + ' — ' + doc.f.n, subject: 'Folio ' + doc.id + ' · Huella ' + (signed ? signed.s.h : ''), creator: 'Firmas MYOB' });
   pdf.addImage(c.toDataURL('image/jpeg', 0.94), 'JPEG', 0, 0, 612, 792, undefined, 'FAST');
-  saveBlob(pdf.output('blob'), `Carta-recomendacion-${fileSafe(doc.f.n)}-${doc.id}.pdf`);
+  saveBlob(pdf.output('blob'), `${fileName(doc)}.pdf`);
 }
 
 /* ---------- registro local de enviadas / recibidas ---------- */
 async function registerSent(doc) { const sent = store.get('sent', {}); const h = await huella(doc); const e = sent[doc.id] || { hashes: [], to: doc.f.n }; if (!e.hashes.includes(h)) e.hashes.push(h); e.at = new Date().toISOString(); sent[doc.id] = e; store.set('sent', sent); }
-function registerReceived(doc, signed, code) { const rec = store.get('rec', []).filter((r) => !(r.id === doc.id && r.ts === signed.s.ts)); rec.unshift({ id: doc.id, n: doc.f.n, ts: signed.s.ts, code }); store.set('rec', rec.slice(0, 30)); }
+function registerReceived(doc, signed, code) { const rec = store.get('rec', []).filter((r) => !(r.id === doc.id && r.ts === signed.s.ts)); rec.unshift({ id: doc.id, n: doc.f.n, tipo: doc.tipo || '', ts: signed.s.ts, code }); store.set('rec', rec.slice(0, 30)); }
 
 /* ============ VISTA EDITOR ============ */
-const FIELDS = ['f_name', 'f_cargo', 'f_emp', 'f_contacto', 'f_wa', 'me_name', 'me_wa', 'rel', 'tiempo', 'puesto', 'cual', 'lugar', 'dest'];
-let ed = null;
+const BASE = ['f_name', 'f_cargo', 'f_emp', 'f_contacto', 'f_wa', 'me_name', 'me_wa', 'lugar', 'dest'];
+let ed = null, edLink = '';
+const curT = () => tplById(ed.tpl);
+function exampleValues(T, keep) { return Object.assign({}, COMUNES, T.ejemplo, keep || {}); }
 function edLoad() {
   const saved = store.get('draft', null);
-  ed = saved || { v: Object.assign({}, EJEMPLO), manual: false, cuerpo: '', id: randomFolio(), msg: '', example: true };
-  for (const k of FIELDS) $('#' + k).value = ed.v[k] || '';
-  $('#cuerpo').value = ed.manual ? ed.cuerpo : plantilla(ed.v);
+  ed = saved || { tpl: 'laboral', v: exampleValues(tplById('laboral')), manual: false, cuerpo: '', id: randomFolio(), msg: '', example: true };
+  if (!ed.tpl) ed.tpl = 'laboral';             // borradores de la versión anterior
+  if (!ed.bodies) ed.bodies = {};
+  if (ed.v.f_showtel === undefined) ed.v.f_showtel = true;
+}
+function fillInputs() {
+  const T = curT();
+  for (const k of BASE) $('#' + k).value = ed.v[k] || '';
+  $('#f_showtel').checked = ed.v.f_showtel !== false;
+  // textos que cambian según la plantilla
+  $('#tplName').textContent = T.nombre;
+  $('#tplUse').textContent = 'Úsala para: ' + T.uso;
+  $('#signerTitle').textContent = T.firmante;
+  $('#lbl_cargo').textContent = T.l2; $('#lbl_emp').textContent = T.l3 || '';
+  $('#wrap_emp').hidden = !T.l3; $('#lbl_me').textContent = T.yo;
+  const box = $('#tplFields'); box.replaceChildren();
+  for (const c of T.campos) {
+    const inp = el('input', { type: 'text', id: 't_' + c.id, placeholder: c.ph || '', autocomplete: 'off' }); inp.value = ed.v[c.id] || '';
+    inp.addEventListener('input', onEdit);
+    box.append(el('label', { class: 'f' + (c.full ? ' full' : '') }, c.label, inp));
+  }
+  if (T.tip) box.append(el('p', { class: 'note tpl-tip', style: 'margin:0', text: T.tip }));
+  $('#cuerpo').value = ed.manual ? ed.cuerpo : plantilla(ed.v, T);
+  $('#cuerpo').placeholder = 'Escribe aquí el texto. Deja una línea en blanco entre párrafos.';
   $('#msg').value = ed.msg || '';
+  renderTplPanel();
+}
+function renderTplPanel() {
+  const panel = $('#tplPanel'); panel.replaceChildren();
+  for (const T of TEMPLATES) {
+    const b = el('button', { type: 'button', class: 'tpl-opt', 'aria-pressed': String(T.id === ed.tpl), 'data-tpl': T.id },
+      el('b', { text: T.nombre }), el('span', { class: 'ex', text: 'Ejemplos: ' + T.uso }), el('span', { class: 'who', text: 'Firma: ' + T.firma }));
+    b.addEventListener('click', () => chooseTpl(T.id));
+    panel.append(b);
+  }
+}
+function toggleTplPanel(open) { const p = $('#tplPanel'); p.hidden = !open; $('#tplBtn').setAttribute('aria-expanded', String(open)); }
+function chooseTpl(id) {
+  readInputs();
+  if (ed.manual) ed.bodies[ed.tpl] = $('#cuerpo').value;
+  const T = tplById(id);
+  ed.tpl = id;
+  if (ed.example) ed.v = exampleValues(T, { me_name: ed.v.me_name, me_wa: ed.v.me_wa });
+  ed.manual = !!ed.bodies[id]; ed.cuerpo = ed.bodies[id] || '';
+  fillInputs(); toggleTplPanel(false); edRefresh();
+  toast('Plantilla: ' + T.nombre);
+  $('#tplName').scrollIntoView({ behavior: 'smooth', block: 'center' });
+}
+function readInputs() {
+  for (const k of BASE) ed.v[k] = $('#' + k).value;
+  ed.v.f_showtel = $('#f_showtel').checked;
+  for (const c of curT().campos) { const i = $('#t_' + c.id); if (i) ed.v[c.id] = i.value; }
 }
 function edDoc() {
-  return { v: 1, id: ed.id, fecha: hoyISO(), lugar: ed.v.lugar || 'Guadalajara, Jalisco', dest: ed.v.dest || 'A quien corresponda', asunto: 'Carta de recomendación',
-    cuerpo: $('#cuerpo').value.trim(), f: { n: ed.v.f_name.trim() || '[Nombre de quien firma]', cargo: ed.v.f_cargo.trim(), emp: ed.v.f_emp.trim(), contacto: ed.v.f_contacto.trim() },
-    de: ed.v.me_name.trim() || 'Remitente', rt: waNumber(ed.v.me_wa) };
+  const T = curT(), v = ed.v, libreAsunto = (v.lb_asunto || '').trim() || 'Documento';
+  return { v: 2, id: ed.id, tpl: T.id, tipo: T.id === 'libre' ? libreAsunto : T.nombre, fecha: hoyISO(),
+    lugar: (v.lugar || '').trim() || 'Guadalajara, Jalisco', dest: (v.dest || '').trim() || 'A quien corresponda',
+    asunto: T.id === 'libre' ? libreAsunto : T.asunto, rol: T.rol || '',
+    cuerpo: $('#cuerpo').value.trim() || '[Escribe el texto del documento]',
+    f: { n: (v.f_name || '').trim() || '[Nombre de quien firma]', cargo: (v.f_cargo || '').trim(), emp: T.l3 ? (v.f_emp || '').trim() : '',
+      contacto: (v.f_contacto || '').trim(), tel: v.f_showtel !== false ? fmtTel(v.f_wa) : '' },
+    de: (v.me_name || '').trim() || 'Remitente', rt: waNumber(v.me_wa) };
 }
-function defaultMsg(doc) { return `Hola ${firstName(doc.f.n)}, te comparto la carta de recomendación que platicamos. La puedes revisar y firmar desde tu celular en un minuto, sin instalar nada:`; }
+function defaultMsg(doc) {
+  const T = curT(), pron = T.corto.startsWith('el ') ? 'Lo' : 'La';
+  return `Hola ${firstName(doc.f.n)}, te comparto ${T.corto} que platicamos. ${pron} puedes revisar y firmar desde tu celular en un minuto, sin instalar nada:`;
+}
+function onEdit() { if (ed.example) ed.example = false; edRefresh(); }
 function edRefresh() {
-  for (const k of FIELDS) ed.v[k] = $('#' + k).value;
-  if (!ed.manual) $('#cuerpo').value = plantilla(ed.v);
+  readInputs();
+  const T = curT();
+  if (!ed.manual) $('#cuerpo').value = plantilla(ed.v, T);
   ed.cuerpo = $('#cuerpo').value; ed.msg = $('#msg').value; store.set('draft', ed);
   $('#resetBody').hidden = !ed.manual;
   $('#exampleChip').hidden = !ed.example;
+  $('#showtelLbl').textContent = `Poner este teléfono en el documento para que puedan comunicarse con ${firstName(ed.v.f_name) || 'esta persona'}.`;
   const doc = edDoc(); renderPaper($('#edPaper'), doc, null);
   const link = baseUrl() + '#c=' + pack(doc);
   const msg = (ed.msg.trim() || defaultMsg(doc)) + '\n\n' + link;
@@ -568,28 +743,29 @@ function edRefresh() {
   edLink = link;
   const warns = [];
   if (location.protocol === 'file:') warns.push('Estás abriendo el archivo desde tu equipo. Para que tu contacto pueda abrir el enlace, esta página debe estar publicada en internet (por ejemplo en GitHub Pages).');
-  if (!waNumber(ed.v.me_wa)) warns.push('Agrega tu WhatsApp en el paso 2 para que la carta firmada te llegue directo.');
+  if (!waNumber(ed.v.me_wa)) warns.push('Agrega tu WhatsApp en el paso 2 para que el documento firmado te llegue directo.');
+  if (ed.v.f_showtel !== false && !digits(ed.v.f_wa)) warns.push('Falta el teléfono de quien firma: sin él, el documento no tendrá un número para comunicarse con esta persona.');
   $('#envWarn').hidden = !warns.length; $('#envWarn').textContent = warns.join(' ');
 }
-let edLink = '';
 function edReceived() {
   const rec = store.get('rec', []); $('#recCard').hidden = !rec.length; const ul = $('#recList'); ul.replaceChildren();
-  for (const r of rec) { const li = el('li'); li.append(el('span', { text: `${r.n} · ${fechaHora(r.ts)} · ${r.id}` }), el('a', { href: '#f=' + r.code, text: 'Abrir' })); ul.append(li); }
+  for (const r of rec) { const li = el('li'); li.append(el('span', { text: `${r.tipo ? r.tipo + ' · ' : ''}${r.n} · ${fechaHora(r.ts)} · ${r.id}` }), el('a', { href: '#f=' + r.code, text: 'Abrir' })); ul.append(li); }
 }
 function initEditor() {
-  edLoad();
-  const markEdited = () => { if (ed.example) { ed.example = false; } };
-  for (const k of FIELDS) $('#' + k).addEventListener('input', () => { markEdited(); edRefresh(); });
-  $('#cuerpo').addEventListener('input', () => { ed.manual = true; markEdited(); edRefresh(); });
+  edLoad(); fillInputs();
+  for (const k of BASE) $('#' + k).addEventListener('input', onEdit);
+  $('#f_showtel').addEventListener('change', onEdit);
+  $('#cuerpo').addEventListener('input', () => { ed.manual = true; onEdit(); });
   $('#msg').addEventListener('input', edRefresh);
-  $('#resetBody').addEventListener('click', () => { ed.manual = false; edRefresh(); });
+  $('#tplBtn').addEventListener('click', () => toggleTplPanel($('#tplPanel').hidden));
+  $('#resetBody').addEventListener('click', () => { ed.manual = false; delete ed.bodies[ed.tpl]; edRefresh(); });
   $('#sendBtn').addEventListener('click', () => { registerSent(edDoc()); });
   $('#copyBtn').addEventListener('click', () => { registerSent(edDoc()); copyText(edLink); });
   $('#newBtn').addEventListener('click', () => {
-    const keep = { me_name: ed.v.me_name, me_wa: ed.v.me_wa, lugar: ed.v.lugar, dest: 'A quien corresponda' };
-    ed = { v: Object.assign({}, EJEMPLO, { f_name: '', f_cargo: '', f_emp: '', f_contacto: '', f_wa: '', rel: '', tiempo: '', puesto: ed.v.puesto, cual: ed.v.cual }, keep), manual: false, cuerpo: '', id: randomFolio(), msg: '', example: false };
-    for (const k of FIELDS) $('#' + k).value = ed.v[k] || '';
-    edRefresh(); toast('Nueva carta, folio ' + ed.id); $('#f_name').focus();
+    readInputs();
+    const keep = { me_name: ed.v.me_name, me_wa: ed.v.me_wa, lugar: ed.v.lugar, dest: 'A quien corresponda', f_showtel: true };
+    ed = { tpl: ed.tpl, v: keep, manual: false, cuerpo: '', id: randomFolio(), msg: '', example: false, bodies: {} };
+    fillInputs(); edRefresh(); toast('Documento nuevo, folio ' + ed.id); $('#f_name').focus();
   });
 }
 
@@ -629,14 +805,14 @@ function makePad(canvas, onChange) {
   };
 }
 function initSign(doc) {
-  document.title = 'Firmar carta · Firmas MYOB';
+  document.title = 'Firmar documento · Firmas MYOB';
   const de = doc.de || 'Alguien';
   $('#sgInitial').textContent = (de[0] || 'C').toUpperCase();
-  $('#sgTitle').textContent = `${firstName(de)} te pidió firmar su carta de recomendación`;
+  $('#sgTitle').textContent = `${firstName(de)} te pidió firmar: ${doc.tipo || 'Carta de recomendación'}`;
   $('#sgFolio').textContent = 'Folio ' + doc.id;
   renderPaper($('#sgPaper'), doc, null);
   $('#sgName').value = doc.f.n.startsWith('[') ? '' : doc.f.n;
-  $('#sgChange').href = waLink(doc.rt, `Hola ${firstName(de)}, sobre la carta (folio ${doc.id}), me gustaría cambiar lo siguiente: `);
+  $('#sgChange').href = waLink(doc.rt, `Hola ${firstName(de)}, sobre el documento (folio ${doc.id}), me gustaría cambiar lo siguiente: `);
   const btn = $('#sgSign');
   const check = () => { $('#padPh').hidden = pad.count > 0; btn.disabled = !(pad.count > 4 && $('#sgOk').checked && $('#sgName').value.trim()); };
   pad = makePad($('#padCanvas'), check);
@@ -649,7 +825,7 @@ function initSign(doc) {
     signed = { d: doc, s }; const code = pack(signed); link = baseUrl() + '#f=' + code;
     renderPaper($('#sgPaper'), doc, signed);
     pad.lock(true); $('#pad').classList.add('locked'); $('#sgCard').hidden = true; $('#sgDone').hidden = false;
-    $('#sgReturn').href = waLink(doc.rt, `Listo, ${firstName(de)}. Aquí está la carta firmada (folio ${doc.id}):\n\n${link}`);
+    $('#sgReturn').href = waLink(doc.rt, `Listo, ${firstName(de)}. Aquí está firmado: ${doc.tipo || 'Carta de recomendación'} (folio ${doc.id}).\n\n${link}`);
     $('#sgReturnLbl').textContent = doc.rt ? `Enviar a ${firstName(de)} por WhatsApp` : 'Enviar por WhatsApp';
     $('#sgDoneTxt').textContent = doc.rt ? `Toca el botón: se abre WhatsApp con el mensaje listo para ${firstName(de)}. Solo presiona enviar.` : 'Toca el botón, elige a quien te la pidió y presiona enviar.';
     $('#sgDone').scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -662,8 +838,8 @@ function initSign(doc) {
 /* ============ VISTA FIRMADA ============ */
 async function initSigned(signed, code) {
   const doc = signed.d, s = signed.s;
-  document.title = 'Carta firmada · ' + doc.f.n;
-  $('#snTitle').textContent = 'Carta firmada por ' + doc.f.n;
+  document.title = (doc.tipo || 'Carta') + ' firmada · ' + doc.f.n;
+  $('#snTitle').textContent = (doc.tipo || 'Carta de recomendación') + ', firmada por ' + doc.f.n;
   $('#snSub').textContent = 'Firmó ' + s.n + ' el ' + fechaHora(s.ts) + '.';
   $('#snFolio').textContent = 'Folio ' + doc.id;
   renderPaper($('#snPaper'), doc, signed);
@@ -675,7 +851,7 @@ async function initSigned(signed, code) {
   if (h !== s.h) add('bad', 'Datos alterados', 'La huella guardada en la firma no corresponde al texto. Pide que la vuelvan a firmar.');
   else if (sent && sent.hashes.includes(h)) add('', 'Texto idéntico al que enviaste', 'El texto firmado es exactamente el que enviaste desde este dispositivo.');
   else if (sent) add('bad', 'El texto cambió', 'Este folio salió de aquí, pero el texto firmado no coincide con ninguna versión que enviaste. Revísalo antes de usarlo.');
-  else add('neutral', 'Sin comparación', 'La carta se envió desde otro dispositivo o navegador, así que no hay copia local para comparar. La huella sí corresponde al texto firmado.');
+  else add('neutral', 'Sin comparación', 'El documento se envió desde otro dispositivo o navegador, así que no hay copia local para comparar. La huella sí corresponde al texto firmado.');
   v.append(el('p', { class: 'muted', style: 'margin:0', text: `Huella del texto: ${s.h} · Folio ${doc.id}` }));
 
   const busy = (b, fn) => async () => { b.disabled = true; try { await fn(); } catch (e) { toast('No se pudo generar el archivo'); console.error(e); } b.disabled = false; };
@@ -692,8 +868,8 @@ async function initSigned(signed, code) {
     shareB.hidden = false;
     shareB.onclick = busy(shareB, async () => {
       const c = await renderSheet(doc, signed, 2); const blob = await canvasBlob(c, 'image/png');
-      const file = new File([blob], `Carta-recomendacion-${fileSafe(doc.f.n)}-${doc.id}.png`, { type: 'image/png' });
-      try { await navigator.share({ files: [file], title: 'Carta de recomendación' }); } catch (e) {}
+      const file = new File([blob], `${fileName(doc)}.png`, { type: 'image/png' });
+      try { await navigator.share({ files: [file], title: doc.tipo || 'Carta de recomendación' }); } catch (e) {}
     });
   }
 }

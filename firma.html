@@ -1,0 +1,720 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Firmas MYOB</title>
+<meta name="description" content="Crea una carta, envíala por WhatsApp, que la firmen con el dedo y recíbela lista para PDF o imagen.">
+<meta property="og:title" content="Carta para firmar">
+<meta property="og:description" content="Revísala y fírmala desde tu celular en un minuto. Sin apps ni cuentas.">
+<meta name="theme-color" content="#13704A">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700&family=Instrument+Sans:wght@400;500;600&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&display=swap">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pako/2.1.0/pako.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<style>
+/* Layout: mesa de trabajo verde selva; formulario a la izquierda, hoja tamaño carta a la derecha; en celular todo en una columna */
+:root{
+  --bg:#EDF3EE; --surface:#FFFFFF; --ink:#13241B; --muted:#56695D; --line:#D2DDD5;
+  --accent:#13704A; --accent-ink:#FFFFFF; --accent-soft:#DDEFE4; --lime:#9BCB3C;
+  --pen:#1D2F7A; --warn:#9A4B12; --warn-soft:#FBEBDD; --bad:#B42318; --bad-soft:#FDE6E3;
+  --paper:#FFFFFF; --paper-ink:#1B1B1B; --paper-shadow:0 1px 2px rgba(19,36,27,.08),0 12px 32px -12px rgba(19,36,27,.22);
+  --f-display:"Bricolage Grotesque","Instrument Sans",system-ui,sans-serif;
+  --f-ui:"Instrument Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --f-letter:"Source Serif 4",Georgia,"Times New Roman",serif;
+  --r:14px; color-scheme:light;
+}
+@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]){
+  --bg:#0E1913; --surface:#15241B; --ink:#E4EEE7; --muted:#9BB1A3; --line:#2A3E32;
+  --accent:#3DBE82; --accent-ink:#04130B; --accent-soft:#1B3A29; --lime:#B5DE5E;
+  --warn:#F0A868; --warn-soft:#3A2614; --bad:#F2877B; --bad-soft:#3D1A17;
+  --paper-shadow:0 1px 2px rgba(0,0,0,.4),0 16px 36px -14px rgba(0,0,0,.7); color-scheme:dark; } }
+:root[data-theme="dark"]{
+  --bg:#0E1913; --surface:#15241B; --ink:#E4EEE7; --muted:#9BB1A3; --line:#2A3E32;
+  --accent:#3DBE82; --accent-ink:#04130B; --accent-soft:#1B3A29; --lime:#B5DE5E;
+  --warn:#F0A868; --warn-soft:#3A2614; --bad:#F2877B; --bad-soft:#3D1A17;
+  --paper-shadow:0 1px 2px rgba(0,0,0,.4),0 16px 36px -14px rgba(0,0,0,.7); color-scheme:dark; }
+
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.5 var(--f-ui);
+  padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+[hidden]{display:none!important}
+img{max-width:100%}
+.wrap{max-width:1180px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+
+header.top{border-bottom:1px solid var(--line);background:var(--surface)}
+header.top .wrap{display:flex;align-items:center;justify-content:space-between;gap:12px;padding-block:12px}
+.brand{display:flex;align-items:center;gap:10px;font:700 18px/1 var(--f-display);letter-spacing:-.01em;color:var(--ink);text-decoration:none}
+.brand svg{width:28px;height:28px;flex:none}
+.brand small{font:500 12px/1 var(--f-ui);color:var(--muted);letter-spacing:.02em;margin-left:2px}
+.toplink{font-size:13px;color:var(--muted);text-decoration:none;border:1px solid var(--line);padding:6px 10px;border-radius:999px}
+.toplink:hover{color:var(--ink)}
+
+main{padding-block:24px 64px}
+h1,h2{font-family:var(--f-display);letter-spacing:-.015em;text-wrap:balance;margin:0}
+h1{font-size:clamp(24px,4vw,34px);line-height:1.1}
+h2{font-size:17px;line-height:1.25;display:flex;align-items:center;gap:10px}
+.lede{color:var(--muted);margin:8px 0 0;max-width:62ch}
+.step{font:600 12px/1 var(--f-ui);color:var(--accent);background:var(--accent-soft);border-radius:999px;padding:5px 8px;letter-spacing:.04em}
+
+.grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.05fr);gap:28px;margin-top:22px;align-items:start}
+@media (max-width:900px){.grid{grid-template-columns:minmax(0,1fr)}}
+.col{display:flex;flex-direction:column;gap:16px;min-width:0}
+.sticky{position:sticky;top:16px}
+@media (max-width:900px){.sticky{position:static}}
+
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:18px;display:flex;flex-direction:column;gap:14px;min-width:0}
+.fields{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+@media (max-width:520px){.fields{grid-template-columns:1fr}}
+.full{grid-column:1/-1}
+label.f{display:flex;flex-direction:column;gap:5px;font-size:13px;font-weight:500;color:var(--muted);min-width:0}
+label.f span.hint{font-weight:400;font-size:12px}
+input[type=text],input[type=tel],textarea{font:15px/1.45 var(--f-ui);color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:10px 12px;width:100%;min-width:0}
+textarea{resize:vertical;min-height:120px;font-family:var(--f-letter);font-size:15.5px;line-height:1.55}
+textarea#cuerpo{min-height:280px}
+input:focus-visible,textarea:focus-visible,button:focus-visible,a:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.row{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+.between{justify-content:space-between}
+
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;font:600 15px/1 var(--f-ui);border-radius:12px;padding:14px 18px;border:1px solid var(--line);background:var(--surface);color:var(--ink);cursor:pointer;text-decoration:none;min-height:48px}
+.btn:hover{border-color:var(--muted)}
+.btn svg{width:18px;height:18px;flex:none}
+.btn.primary{background:var(--accent);color:var(--accent-ink);border-color:transparent}
+.btn.primary:hover{filter:brightness(1.06)}
+.btn.block{width:100%}
+.btn.ghost{background:transparent;border-color:transparent;color:var(--muted);padding-inline:8px;min-height:36px;font-weight:500;font-size:14px}
+.btn.ghost:hover{color:var(--ink)}
+.btn[aria-disabled=true],.btn:disabled{opacity:.45;pointer-events:none}
+
+.note{font-size:13px;border-radius:10px;padding:10px 12px;background:var(--accent-soft);color:var(--ink)}
+.note.warn{background:var(--warn-soft);color:var(--warn)}
+.note.bad{background:var(--bad-soft);color:var(--bad)}
+.chip{display:inline-flex;align-items:center;gap:6px;font:600 12px/1 var(--f-ui);padding:6px 10px;border-radius:999px;background:var(--accent-soft);color:var(--accent)}
+.chip.warn{background:var(--warn-soft);color:var(--warn)}
+.chip.bad{background:var(--bad-soft);color:var(--bad)}
+.chip.neutral{background:var(--bg);color:var(--muted);border:1px solid var(--line)}
+.mono{font-family:ui-monospace,"SF Mono",Menlo,Consolas,monospace;font-size:12.5px;letter-spacing:.03em}
+.muted{color:var(--muted)}
+.small{font-size:13px}
+.msgbox{min-height:96px;font-family:var(--f-ui);font-size:14px}
+
+/* Hoja tamaño carta */
+.sheet-wrap{display:flex;flex-direction:column;gap:10px;min-width:0}
+.sheet-label{display:flex;justify-content:space-between;align-items:center;font-size:12px;color:var(--muted);letter-spacing:.04em;text-transform:uppercase;font-weight:600}
+.paper{background:var(--paper);color:var(--paper-ink);box-shadow:var(--paper-shadow);border-radius:4px;
+  padding:clamp(22px,6.5%,56px) clamp(20px,7.5%,64px);font:clamp(13.5px,1.35vw,15px)/1.6 var(--f-letter);min-height:0;overflow-wrap:anywhere}
+@media (max-width:900px){.paper{font-size:clamp(13.5px,3.6vw,15.5px)}}
+.paper p{margin:0 0 .85em}
+.paper .p-date{text-align:right}
+.paper .p-dest{font-weight:600;margin-top:1.4em;letter-spacing:.01em}
+.paper .p-asunto{text-align:right;font-weight:600;margin:1em 0 1.2em}
+.paper .p-body p{text-align:justify;hyphens:auto}
+.paper .p-sign{display:flex;flex-direction:column;align-items:center;text-align:center;margin-top:1.4em;line-height:1.4}
+.paper .p-sigbox{height:5.2em;width:min(17em,80%);display:flex;align-items:flex-end;justify-content:center}
+.paper .p-sigbox img{max-height:100%;max-width:100%}
+.paper .p-pending{font:500 12px/1.2 var(--f-ui);color:#7A8A80;border:1.5px dashed #B9C6BD;border-radius:8px;padding:8px 12px;margin-bottom:6px}
+.paper .p-line{width:min(17em,80%);border-top:1px solid #333;margin:2px 0 6px}
+.paper .p-foot{margin-top:2em;padding-top:.8em;border-top:1px solid #E3E3E3;font:12px/1.45 var(--f-ui);color:#666;text-align:left}
+
+/* Pad de firma */
+.pad{position:relative;border:1.5px dashed var(--line);border-radius:12px;background:#FFFFFF;touch-action:none;overflow:hidden}
+.pad canvas{display:block;width:100%;height:190px;touch-action:none;cursor:crosshair}
+.pad .base{position:absolute;left:8%;right:8%;bottom:42px;border-top:1px solid #C9D3CC;pointer-events:none}
+.pad .x{position:absolute;left:8%;bottom:46px;font:600 16px/1 var(--f-ui);color:#9AA89F;pointer-events:none}
+.pad .ph{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font:500 14px/1 var(--f-ui);color:#9AA89F;pointer-events:none}
+.pad.locked{border-style:solid;border-color:var(--accent)}
+.check{display:flex;gap:10px;align-items:flex-start;font-size:14px}
+.check input{width:20px;height:20px;margin:1px 0 0;accent-color:var(--accent);flex:none}
+
+.hero-sign{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:18px;display:flex;gap:14px;align-items:flex-start}
+.hero-sign .dot{width:40px;height:40px;border-radius:50%;background:var(--accent-soft);color:var(--accent);display:grid;place-items:center;flex:none;font:700 16px/1 var(--f-display)}
+.list{display:flex;flex-direction:column;gap:8px;margin:0;padding:0;list-style:none}
+.list li{display:flex;justify-content:space-between;gap:10px;align-items:center;padding:10px 12px;border:1px solid var(--line);border-radius:10px;flex-wrap:wrap}
+.list a{color:var(--accent);font-weight:600;text-decoration:none}
+.toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:999px;font-size:14px;font-weight:500;z-index:20;max-width:calc(100% - 32px)}
+.done-box{display:flex;flex-direction:column;gap:10px}
+.done-box h2{color:var(--accent)}
+@media (prefers-reduced-motion:no-preference){.btn{transition:filter .15s,border-color .15s}}
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div class="wrap">
+    <a class="brand" href="#" id="brandLink" aria-label="Firmas MYOB, inicio">
+      <svg viewBox="0 0 32 32" aria-hidden="true"><rect width="32" height="32" rx="9" fill="var(--accent)"/><path d="M8 21c3.5-.5 5-6 7.5-6s1.2 5 3.6 5c1.6 0 2.6-2.4 4.9-3.4" fill="none" stroke="var(--accent-ink)" stroke-width="2.2" stroke-linecap="round"/><path d="M8 24.5h16" stroke="var(--lime)" stroke-width="2" stroke-linecap="round"/></svg>
+      <span>Firmas <small>MYOB</small></span>
+    </a>
+    <a class="toplink" href="#" id="toEditor" hidden>Crear una carta</a>
+  </div>
+</header>
+
+<main>
+  <!-- ============ VISTA 1: EDITOR (tú) ============ -->
+  <section id="vEditor" class="wrap" hidden>
+    <h1>Carta de recomendación para firmar</h1>
+    <p class="lede">Llena los datos, revisa la hoja y envíala por WhatsApp. Tu contacto la firma con el dedo y te la regresa; tú la descargas en PDF o imagen.</p>
+
+    <div class="grid">
+      <div class="col">
+        <div class="card">
+          <h2><span class="step">1</span> Quién firma la carta</h2>
+          <div class="fields">
+            <label class="f">Nombre completo<input type="text" id="f_name" autocomplete="off"></label>
+            <label class="f">Cargo<input type="text" id="f_cargo" autocomplete="off"></label>
+            <label class="f">Empresa<input type="text" id="f_emp" autocomplete="off"></label>
+            <label class="f">Contacto en la carta <span class="hint">Teléfono o correo (opcional)</span><input type="text" id="f_contacto" autocomplete="off"></label>
+            <label class="f full">WhatsApp de quien firma <span class="hint">10 dígitos. Si lo dejas vacío, WhatsApp te deja elegir el contacto.</span><input type="tel" id="f_wa" inputmode="tel" autocomplete="off" placeholder="33 1234 5678"></label>
+          </div>
+        </div>
+
+        <div class="card">
+          <h2><span class="step">2</span> Sobre ti y el puesto</h2>
+          <div class="fields">
+            <label class="f">Tu nombre completo<input type="text" id="me_name" autocomplete="name"></label>
+            <label class="f">Tu WhatsApp <span class="hint">Aquí te llega la carta firmada</span><input type="tel" id="me_wa" inputmode="tel" autocomplete="tel" placeholder="33 1234 5678"></label>
+            <label class="f">Qué fue de ti<input type="text" id="rel" placeholder="jefa directa"></label>
+            <label class="f">Por cuánto tiempo<input type="text" id="tiempo" placeholder="4 años"></label>
+            <label class="f full">Puesto al que aplicas<input type="text" id="puesto"></label>
+            <label class="f full">Lo que destaca de ti<input type="text" id="cual"></label>
+            <label class="f">Lugar<input type="text" id="lugar"></label>
+            <label class="f">Dirigida a<input type="text" id="dest"></label>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="row between">
+            <h2><span class="step">3</span> Texto de la carta</h2>
+            <button class="btn ghost" id="resetBody" hidden type="button">Volver a la plantilla</button>
+          </div>
+          <p class="small muted" style="margin:0" id="bodyHint">Se escribe solo con los datos de arriba. Puedes editarlo libremente; deja una línea en blanco entre párrafos.</p>
+          <textarea id="cuerpo" spellcheck="true"></textarea>
+        </div>
+
+        <div class="card">
+          <h2><span class="step">4</span> Enviar por WhatsApp</h2>
+          <label class="f">Mensaje que acompaña el enlace<textarea id="msg" class="msgbox"></textarea></label>
+          <div id="envWarn" class="note warn" hidden></div>
+          <a class="btn primary block" id="sendBtn" href="#" target="_blank" rel="noopener">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 11.5a8.4 8.4 0 0 1-12.4 7.4L3 21l2.1-5.4A8.4 8.4 0 1 1 21 11.5z"/></svg>
+            <span id="sendLabel">Enviar por WhatsApp</span>
+          </a>
+          <div class="row">
+            <button class="btn" id="copyBtn" type="button">Copiar enlace</button>
+            <a class="btn" id="testBtn" href="#" target="_blank" rel="noopener">Ver como firmante</a>
+            <button class="btn ghost" id="newBtn" type="button">Nueva carta</button>
+          </div>
+          <p class="small muted" style="margin:0">Folio <span class="mono" id="folioOut"></span> · El texto viaja dentro del enlace; no se guarda en ningún servidor.</p>
+        </div>
+
+        <div class="card" id="recCard" hidden>
+          <h2>Cartas firmadas que has abierto aquí</h2>
+          <ul class="list" id="recList"></ul>
+        </div>
+      </div>
+
+      <div class="col sticky">
+        <div class="sheet-wrap">
+          <div class="sheet-label"><span>Vista previa · tamaño carta</span><span class="chip neutral" id="exampleChip">Datos de ejemplo</span></div>
+          <div class="paper" id="edPaper"></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ VISTA 2: FIRMANTE ============ -->
+  <section id="vSign" class="wrap" hidden>
+    <div class="hero-sign">
+      <div class="dot" id="sgInitial">C</div>
+      <div>
+        <h1 id="sgTitle">Te pidieron firmar una carta</h1>
+        <p class="lede" style="margin-top:6px">Léela, firma con tu dedo y devuélvela por WhatsApp. Toma un minuto; no necesitas instalar nada ni crear cuenta.</p>
+      </div>
+    </div>
+
+    <div class="grid">
+      <div class="col">
+        <div class="sheet-wrap">
+          <div class="sheet-label"><span>La carta</span><span class="mono" id="sgFolio"></span></div>
+          <div class="paper" id="sgPaper"></div>
+        </div>
+      </div>
+      <div class="col sticky">
+        <div class="card" id="sgCard">
+          <h2><span class="step">1</span> Firma aquí</h2>
+          <div class="pad" id="pad">
+            <canvas id="padCanvas" aria-label="Área para firmar con el dedo o el mouse"></canvas>
+            <div class="base"></div><div class="x">×</div>
+            <div class="ph" id="padPh">Firma con tu dedo</div>
+          </div>
+          <div class="row between">
+            <button class="btn ghost" type="button" id="padClear">Borrar firma</button>
+            <span class="small muted">Gira el celular si necesitas más espacio</span>
+          </div>
+          <label class="f">Tu nombre<input type="text" id="sgName" autocomplete="name"></label>
+          <label class="check"><input type="checkbox" id="sgOk"><span>Leí la carta y la firmo de forma electrónica.</span></label>
+          <button class="btn primary block" id="sgSign" type="button" disabled>Firmar carta</button>
+          <a class="btn ghost" id="sgChange" href="#" target="_blank" rel="noopener">¿Algo que corregir? Pedir un cambio</a>
+        </div>
+
+        <div class="card done-box" id="sgDone" hidden>
+          <h2><span class="step">2</span> Listo. Ahora regrésala</h2>
+          <p class="small" style="margin:0" id="sgDoneTxt">Toca el botón y envía el mensaje en WhatsApp.</p>
+          <a class="btn primary block" id="sgReturn" href="#" target="_blank" rel="noopener">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 11.5a8.4 8.4 0 0 1-12.4 7.4L3 21l2.1-5.4A8.4 8.4 0 1 1 21 11.5z"/></svg>
+            <span id="sgReturnLbl">Enviar por WhatsApp</span>
+          </a>
+          <div class="row">
+            <button class="btn" type="button" id="sgCopy">Copiar enlace</button>
+            <button class="btn" type="button" id="sgPng">Guardar copia (imagen)</button>
+            <button class="btn ghost" type="button" id="sgRedo">Volver a firmar</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ VISTA 3: FIRMADA (tú la recibes) ============ -->
+  <section id="vSigned" class="wrap" hidden>
+    <h1 id="snTitle">Carta firmada</h1>
+    <p class="lede" id="snSub"></p>
+    <div class="row" style="margin-top:12px" id="snChips"></div>
+
+    <div class="grid">
+      <div class="col">
+        <div class="sheet-wrap">
+          <div class="sheet-label"><span>Documento firmado</span><span class="mono" id="snFolio"></span></div>
+          <div class="paper" id="snPaper"></div>
+        </div>
+      </div>
+      <div class="col sticky">
+        <div class="card">
+          <h2>Exportar</h2>
+          <button class="btn primary block" type="button" id="snPdf">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12m0 0-4.5-4.5M12 15l4.5-4.5M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/></svg>
+            Descargar PDF
+          </button>
+          <button class="btn block" type="button" id="snPng">Descargar imagen (PNG)</button>
+          <button class="btn block" type="button" id="snShare" hidden>Compartir…</button>
+          <button class="btn block" type="button" id="snPrint">Imprimir</button>
+          <p class="small muted" style="margin:0">Tamaño carta (21.6 × 27.9 cm). La firma, la fecha y la huella del texto quedan impresas al pie.</p>
+        </div>
+        <div class="card">
+          <h2>Comprobación</h2>
+          <div id="snVerify" class="small"></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ ERROR ============ -->
+  <section id="vError" class="wrap" hidden>
+    <div class="card" style="max-width:560px;margin:40px auto">
+      <h2>Este enlace no se pudo abrir</h2>
+      <p class="small" style="margin:0" id="errTxt">Parece incompleto. Pide que te lo reenvíen y ábrelo tocándolo directamente en WhatsApp.</p>
+      <a class="btn" href="#" id="errHome">Crear una carta nueva</a>
+    </div>
+  </section>
+</main>
+
+<div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
+
+<script>
+(() => {
+'use strict';
+const $ = (s) => document.querySelector(s);
+
+/* ---------- almacenamiento local (solo conveniencia) ---------- */
+const store = {
+  get(k, d) { try { const v = localStorage.getItem('firmasmyob.' + k); return v ? JSON.parse(v) : d; } catch (e) { return d; } },
+  set(k, v) { try { localStorage.setItem('firmasmyob.' + k, JSON.stringify(v)); } catch (e) {} }
+};
+
+/* ---------- utilidades ---------- */
+function el(tag, attrs, ...kids) {
+  const n = document.createElement(tag);
+  if (attrs) for (const [k, v] of Object.entries(attrs)) { if (k === 'class') n.className = v; else if (k === 'text') n.textContent = v; else n.setAttribute(k, v); }
+  for (const k of kids) if (k != null) n.append(k);
+  return n;
+}
+let toastT;
+function toast(msg) { const t = $('#toast'); t.textContent = msg; t.hidden = false; clearTimeout(toastT); toastT = setTimeout(() => t.hidden = true, 2600); }
+async function copyText(text) {
+  try { await navigator.clipboard.writeText(text); toast('Enlace copiado'); }
+  catch (e) {
+    const ta = el('textarea'); ta.value = text; ta.style.position = 'fixed'; ta.style.opacity = '0'; document.body.append(ta); ta.select();
+    try { document.execCommand('copy'); toast('Enlace copiado'); } catch (e2) { toast('No se pudo copiar; mantén presionado para copiar'); }
+    ta.remove();
+  }
+}
+const digits = (s) => (s || '').replace(/\D/g, '');
+function waNumber(s) { let d = digits(s); if (d.length === 10) d = '52' + d; if (d.length === 13 && d.startsWith('521')) d = '52' + d.slice(3); return d; }
+function waLink(phone, text) { const n = waNumber(phone); return 'https://wa.me/' + (n.length >= 11 ? n : '') + '?text=' + encodeURIComponent(text); }
+const baseUrl = () => location.href.split('#')[0];
+const firstName = (s) => (s || '').trim().split(/\s+/)[0] || '';
+function randomFolio() { const a = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; let s = ''; const r = crypto.getRandomValues(new Uint8Array(6)); for (const b of r) s += a[b % a.length]; return s; }
+function fechaLarga(iso) { const [y, m, d] = iso.split('-').map(Number); return new Date(y, m - 1, d).toLocaleDateString('es-MX', { day: 'numeric', month: 'long', year: 'numeric' }); }
+function hoyISO() { const d = new Date(); return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); }
+function fechaHora(iso) {
+  const d = new Date(iso);
+  const f = d.toLocaleString('es-MX', { day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit', hour12: false });
+  const off = -d.getTimezoneOffset() / 60; const tz = 'UTC' + (off >= 0 ? '+' : '−') + Math.abs(off);
+  return f + ' h (' + tz + ')';
+}
+const fileSafe = (s) => (s || 'carta').normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^A-Za-z0-9]+/g, '-').replace(/^-|-$/g, '');
+
+/* ---------- empaquetado en el enlace ---------- */
+const b64u = {
+  enc(bytes) { let s = ''; for (let i = 0; i < bytes.length; i += 0x8000) s += String.fromCharCode.apply(null, bytes.subarray(i, i + 0x8000)); return btoa(s).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, ''); },
+  dec(str) { str = str.replace(/-/g, '+').replace(/_/g, '/'); while (str.length % 4) str += '='; const bin = atob(str); const out = new Uint8Array(bin.length); for (let i = 0; i < bin.length; i++) out[i] = bin.charCodeAt(i); return out; }
+};
+function pack(obj) {
+  const bytes = new TextEncoder().encode(JSON.stringify(obj));
+  if (window.pako) { try { return 'z' + b64u.enc(window.pako.deflateRaw(bytes, { level: 9 })); } catch (e) {} }
+  return 'u' + b64u.enc(bytes);
+}
+async function unpack(s) {
+  s = decodeURIComponent(s.trim());
+  const kind = s[0]; let bytes = b64u.dec(s.slice(1));
+  if (kind === 'z') {
+    if (window.pako) bytes = window.pako.inflateRaw(bytes);
+    else { const ds = new DecompressionStream('deflate-raw'); bytes = new Uint8Array(await new Response(new Blob([bytes]).stream().pipeThrough(ds)).arrayBuffer()); }
+  } else if (kind !== 'u') throw new Error('formato');
+  return JSON.parse(new TextDecoder().decode(bytes));
+}
+async function huella(doc) {
+  const data = new TextEncoder().encode(JSON.stringify(doc));
+  let hex;
+  if (crypto.subtle) { const h = new Uint8Array(await crypto.subtle.digest('SHA-256', data)); hex = Array.from(h.slice(0, 4), (b) => b.toString(16).padStart(2, '0')).join(''); }
+  else { let h = 0x811c9dc5; for (const b of data) { h ^= b; h = Math.imul(h, 0x01000193) >>> 0; } hex = h.toString(16).padStart(8, '0'); }
+  hex = hex.toUpperCase(); return hex.slice(0, 4) + '-' + hex.slice(4, 8);
+}
+
+/* ---------- plantilla ---------- */
+const EJEMPLO = {
+  me_name: 'Cristian', me_wa: '', f_name: 'Laura Méndez Ruiz', f_cargo: 'Gerente de Operaciones de Almacén', f_emp: 'Flex Guadalajara',
+  f_contacto: '', f_wa: '', rel: 'jefa directa', tiempo: 'cuatro años', puesto: 'Especialista SAP WM',
+  cual: 'su dominio de SAP WM, el control de inventarios y la automatización de procesos que redujeron tiempos y errores en el almacén',
+  lugar: 'Guadalajara, Jalisco', dest: 'A quien corresponda'
+};
+function plantilla(v) {
+  const n = v.me_name || '[tu nombre]';
+  return [
+    `Por medio de la presente, me permito recomendar ampliamente a ${n}, a quien conozco desde hace ${v.tiempo || '[tiempo]'}, periodo en el que fui su ${v.rel || '[relación]'} en ${v.f_emp || '[empresa]'}.`,
+    `Durante este tiempo, ${firstName(n)} se distinguió por ${v.cual || '[cualidades]'}. Es una persona responsable, honesta y comprometida con los resultados, que trabaja bien en equipo y resuelve problemas con iniciativa.`,
+    `Por lo anterior, considero que ${firstName(n)} es un candidato idóneo para el puesto de ${v.puesto || '[puesto]'} y no tengo duda de que será un elemento valioso para su organización.`,
+    `Se extiende la presente a petición del interesado para los fines que a este convengan. Quedo a sus órdenes para cualquier información adicional.`
+  ].join('\n\n');
+}
+
+/* ---------- firma: codificación de trazos ---------- */
+// sig = { w:600, h:int, p:[[x0,y0,dx,dy,...], ...] }
+function sigStrokes(sig) {
+  return sig.p.map((arr) => { const pts = []; let x = 0, y = 0; for (let i = 0; i < arr.length; i += 2) { x += arr[i]; y += arr[i + 1]; pts.push([x, y]); } return pts; });
+}
+function drawSig(ctx, sig, bx, by, bw, bh, color) {
+  const strokes = sigStrokes(sig); if (!strokes.length) return;
+  let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+  for (const s of strokes) for (const [x, y] of s) { minX = Math.min(minX, x); minY = Math.min(minY, y); maxX = Math.max(maxX, x); maxY = Math.max(maxY, y); }
+  const pad = 6, sw = Math.max(maxX - minX, 1), sh = Math.max(maxY - minY, 1);
+  const k = Math.min((bw - pad * 2) / sw, (bh - pad * 2) / sh, (bw / sig.w) * 1.6);
+  const ox = bx + (bw - sw * k) / 2 - minX * k, oy = by + bh - pad - sh * k - minY * k;
+  ctx.save(); ctx.strokeStyle = color; ctx.fillStyle = color; ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+  ctx.lineWidth = Math.max(1.4, 2.7 * k);
+  for (const s of strokes) {
+    const P = s.map(([x, y]) => [ox + x * k, oy + y * k]);
+    if (P.length === 1) { ctx.beginPath(); ctx.arc(P[0][0], P[0][1], ctx.lineWidth / 2, 0, Math.PI * 2); ctx.fill(); continue; }
+    ctx.beginPath(); ctx.moveTo(P[0][0], P[0][1]);
+    for (let i = 1; i < P.length - 1; i++) { const mx = (P[i][0] + P[i + 1][0]) / 2, my = (P[i][1] + P[i + 1][1]) / 2; ctx.quadraticCurveTo(P[i][0], P[i][1], mx, my); }
+    const L = P[P.length - 1]; ctx.lineTo(L[0], L[1]); ctx.stroke();
+  }
+  ctx.restore();
+}
+function sigImage(sig) {
+  const c = document.createElement('canvas'); c.width = 900; c.height = 300;
+  drawSig(c.getContext('2d'), sig, 0, 0, 900, 300, '#1D2F7A'); return c.toDataURL('image/png');
+}
+
+/* ---------- hoja en pantalla ---------- */
+function renderPaper(target, doc, signed) {
+  const P = (cls, txt) => el('p', cls ? { class: cls, text: txt } : { text: txt });
+  target.replaceChildren();
+  target.append(P('p-date', `${doc.lugar}, a ${fechaLarga(doc.fecha)}`));
+  const dest = el('p', { class: 'p-dest' }); dest.append((doc.dest || 'A quien corresponda').toUpperCase() + ':', el('br'), 'P R E S E N T E'); target.append(dest);
+  target.append(P('p-asunto', 'Asunto: ' + doc.asunto));
+  const body = el('div', { class: 'p-body' });
+  for (const para of doc.cuerpo.split(/\n\s*\n/)) if (para.trim()) body.append(P(null, para.trim().replace(/\s*\n\s*/g, ' ')));
+  target.append(body, P(null, 'Atentamente,'));
+  const sign = el('div', { class: 'p-sign' });
+  const box = el('div', { class: 'p-sigbox' });
+  if (signed) box.append(el('img', { src: sigImage(signed.s), alt: 'Firma de ' + doc.f.n }));
+  else box.append(el('span', { class: 'p-pending', text: 'Firma pendiente' }));
+  sign.append(box, el('div', { class: 'p-line' }), el('strong', { text: doc.f.n }));
+  for (const l of [doc.f.cargo, doc.f.emp, doc.f.contacto]) if (l) sign.append(el('span', { text: l }));
+  target.append(sign);
+  if (signed) target.append(P('p-foot', `Firmado electrónicamente por ${signed.s.n} el ${fechaHora(signed.s.ts)}. Folio ${doc.id} · Huella del texto ${signed.s.h}.`));
+}
+
+/* ---------- hoja para exportar (canvas tamaño carta, 150 ppp × escala) ---------- */
+let fontsP;
+function fontsReady() {
+  if (!fontsP) fontsP = Promise.all(['400 23px "Source Serif 4"', '600 23px "Source Serif 4"', '400 15px "Instrument Sans"']
+    .map((f) => document.fonts ? document.fonts.load(f).catch(() => null) : null)).then(() => document.fonts && document.fonts.ready);
+  return fontsP;
+}
+function wrapLines(ctx, text, maxW) {
+  const words = text.split(/\s+/).filter(Boolean); const lines = []; let cur = [];
+  for (const w of words) { const t = cur.concat(w).join(' '); if (ctx.measureText(t).width > maxW && cur.length) { lines.push(cur); cur = [w]; } else cur.push(w); }
+  if (cur.length) lines.push(cur); return lines;
+}
+function layout(ctx, doc, signed, fs, draw) {
+  const W = 1275, H = 1650, M = 150, CW = W - M * 2, lh = Math.round(fs * 1.52);
+  const SERIF = '"Source Serif 4", Georgia, "Times New Roman", serif', SANS = '"Instrument Sans", Arial, sans-serif';
+  const font = (w, s, f) => ctx.font = `${w} ${s}px ${f || SERIF}`;
+  let y = M + fs;
+  const text = (t, x, align) => { if (draw) { ctx.textAlign = align || 'left'; ctx.fillText(t, x, y); } };
+  ctx.fillStyle = '#1B1B1B';
+  font(400, fs); text(`${doc.lugar}, a ${fechaLarga(doc.fecha)}`, W - M, 'right'); y += lh * 2;
+  font(600, fs); text((doc.dest || 'A quien corresponda').toUpperCase() + ':', M); y += lh; text('P R E S E N T E', M); y += lh * 1.6;
+  text('Asunto: ' + doc.asunto, W - M, 'right'); y += lh * 1.7;
+  font(400, fs);
+  for (const para of doc.cuerpo.split(/\n\s*\n/).map((p) => p.trim().replace(/\s*\n\s*/g, ' ')).filter(Boolean)) {
+    const lines = wrapLines(ctx, para, CW);
+    lines.forEach((words, i) => {
+      if (draw) {
+        ctx.textAlign = 'left';
+        if (i === lines.length - 1 || words.length < 2) ctx.fillText(words.join(' '), M, y);
+        else { const ws = words.map((w) => ctx.measureText(w).width); const gap = (CW - ws.reduce((a, b) => a + b, 0)) / (words.length - 1); let x = M; words.forEach((w, j) => { ctx.fillText(w, x, y); x += ws[j] + gap; }); }
+      }
+      y += lh;
+    });
+    y += Math.round(lh * 0.55);
+  }
+  y += Math.round(lh * 0.2); text('Atentamente,', M); y += lh * 0.4;
+  const sigW = 460, sigH = 150, cx = W / 2;
+  if (draw && signed) drawSig(ctx, signed.s, cx - sigW / 2, y, sigW, sigH, '#1D2F7A');
+  if (draw && !signed) { ctx.save(); ctx.strokeStyle = '#B9C6BD'; ctx.setLineDash([8, 6]); ctx.strokeRect(cx - 120, y + sigH - 60, 240, 46); ctx.restore(); ctx.fillStyle = '#7A8A80'; font(400, 16, SANS); ctx.textAlign = 'center'; ctx.fillText('Firma pendiente', cx, y + sigH - 31); ctx.fillStyle = '#1B1B1B'; }
+  y += sigH + 4;
+  if (draw) { ctx.strokeStyle = '#333'; ctx.lineWidth = 1.4; ctx.beginPath(); ctx.moveTo(cx - 230, y); ctx.lineTo(cx + 230, y); ctx.stroke(); }
+  y += lh; font(600, fs); text(doc.f.n, cx, 'center'); y += Math.round(lh * 0.92);
+  font(400, fs); for (const l of [doc.f.cargo, doc.f.emp, doc.f.contacto]) if (l) { text(l, cx, 'center'); y += Math.round(lh * 0.92); }
+  const bodyEnd = y;
+  if (signed) {
+    font(400, 15, SANS); ctx.fillStyle = '#666';
+    const foot = `Firmado electrónicamente por ${signed.s.n} el ${fechaHora(signed.s.ts)}. Folio ${doc.id} · Huella del texto ${signed.s.h}. Documento generado con Firmas MYOB.`;
+    const fl = wrapLines(ctx, foot, CW); let fy = H - 70 - (fl.length - 1) * 22;
+    if (draw) { ctx.strokeStyle = '#E0E0E0'; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(M, fy - 34); ctx.lineTo(W - M, fy - 34); ctx.stroke(); ctx.textAlign = 'left'; fl.forEach((w) => { ctx.fillText(w.join(' '), M, fy); fy += 22; }); }
+    ctx.fillStyle = '#1B1B1B';
+  }
+  return bodyEnd;
+}
+async function renderSheet(doc, signed, scale) {
+  await fontsReady();
+  const W = 1275, H = 1650; const c = document.createElement('canvas'); c.width = W * scale; c.height = H * scale;
+  const ctx = c.getContext('2d'); ctx.scale(scale, scale); ctx.fillStyle = '#FFFFFF'; ctx.fillRect(0, 0, W, H); ctx.textBaseline = 'alphabetic';
+  let fs = 23; while (fs > 16 && layout(ctx, doc, signed, fs, false) > H - 150) fs -= 0.5;
+  layout(ctx, doc, signed, fs, true); return c;
+}
+const canvasBlob = (c, type, q) => new Promise((res) => c.toBlob(res, type, q));
+function saveBlob(blob, name) {
+  const url = URL.createObjectURL(blob); const a = el('a', { href: url, download: name }); document.body.append(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 4000);
+}
+async function exportPNG(doc, signed) { const c = await renderSheet(doc, signed, 2); saveBlob(await canvasBlob(c, 'image/png'), `Carta-recomendacion-${fileSafe(doc.f.n)}-${doc.id}.png`); }
+async function exportPDF(doc, signed) {
+  if (!window.jspdf) { toast('No cargó el generador de PDF; revisa tu conexión'); return; }
+  const c = await renderSheet(doc, signed, 2);
+  const pdf = new window.jspdf.jsPDF({ unit: 'pt', format: 'letter', compress: true });
+  pdf.setProperties({ title: 'Carta de recomendación — ' + doc.f.n, subject: 'Folio ' + doc.id + ' · Huella ' + (signed ? signed.s.h : ''), creator: 'Firmas MYOB' });
+  pdf.addImage(c.toDataURL('image/jpeg', 0.94), 'JPEG', 0, 0, 612, 792, undefined, 'FAST');
+  saveBlob(pdf.output('blob'), `Carta-recomendacion-${fileSafe(doc.f.n)}-${doc.id}.pdf`);
+}
+
+/* ---------- registro local de enviadas / recibidas ---------- */
+async function registerSent(doc) { const sent = store.get('sent', {}); const h = await huella(doc); const e = sent[doc.id] || { hashes: [], to: doc.f.n }; if (!e.hashes.includes(h)) e.hashes.push(h); e.at = new Date().toISOString(); sent[doc.id] = e; store.set('sent', sent); }
+function registerReceived(doc, signed, code) { const rec = store.get('rec', []).filter((r) => !(r.id === doc.id && r.ts === signed.s.ts)); rec.unshift({ id: doc.id, n: doc.f.n, ts: signed.s.ts, code }); store.set('rec', rec.slice(0, 30)); }
+
+/* ============ VISTA EDITOR ============ */
+const FIELDS = ['f_name', 'f_cargo', 'f_emp', 'f_contacto', 'f_wa', 'me_name', 'me_wa', 'rel', 'tiempo', 'puesto', 'cual', 'lugar', 'dest'];
+let ed = null;
+function edLoad() {
+  const saved = store.get('draft', null);
+  ed = saved || { v: Object.assign({}, EJEMPLO), manual: false, cuerpo: '', id: randomFolio(), msg: '', example: true };
+  for (const k of FIELDS) $('#' + k).value = ed.v[k] || '';
+  $('#cuerpo').value = ed.manual ? ed.cuerpo : plantilla(ed.v);
+  $('#msg').value = ed.msg || '';
+}
+function edDoc() {
+  return { v: 1, id: ed.id, fecha: hoyISO(), lugar: ed.v.lugar || 'Guadalajara, Jalisco', dest: ed.v.dest || 'A quien corresponda', asunto: 'Carta de recomendación',
+    cuerpo: $('#cuerpo').value.trim(), f: { n: ed.v.f_name.trim() || '[Nombre de quien firma]', cargo: ed.v.f_cargo.trim(), emp: ed.v.f_emp.trim(), contacto: ed.v.f_contacto.trim() },
+    de: ed.v.me_name.trim() || 'Remitente', rt: waNumber(ed.v.me_wa) };
+}
+function defaultMsg(doc) { return `Hola ${firstName(doc.f.n)}, te comparto la carta de recomendación que platicamos. La puedes revisar y firmar desde tu celular en un minuto, sin instalar nada:`; }
+function edRefresh() {
+  for (const k of FIELDS) ed.v[k] = $('#' + k).value;
+  if (!ed.manual) $('#cuerpo').value = plantilla(ed.v);
+  ed.cuerpo = $('#cuerpo').value; ed.msg = $('#msg').value; store.set('draft', ed);
+  $('#resetBody').hidden = !ed.manual;
+  $('#exampleChip').hidden = !ed.example;
+  const doc = edDoc(); renderPaper($('#edPaper'), doc, null);
+  const link = baseUrl() + '#c=' + pack(doc);
+  const msg = (ed.msg.trim() || defaultMsg(doc)) + '\n\n' + link;
+  $('#msg').placeholder = defaultMsg(doc);
+  $('#sendBtn').href = waLink(ed.v.f_wa, msg);
+  $('#sendLabel').textContent = 'Enviar a ' + (firstName(ed.v.f_name) || 'tu contacto') + ' por WhatsApp';
+  $('#testBtn').href = link; $('#folioOut').textContent = ed.id;
+  edLink = link;
+  const warns = [];
+  if (location.protocol === 'file:') warns.push('Estás abriendo el archivo desde tu equipo. Para que tu contacto pueda abrir el enlace, esta página debe estar publicada en internet (por ejemplo en GitHub Pages).');
+  if (!waNumber(ed.v.me_wa)) warns.push('Agrega tu WhatsApp en el paso 2 para que la carta firmada te llegue directo.');
+  $('#envWarn').hidden = !warns.length; $('#envWarn').textContent = warns.join(' ');
+}
+let edLink = '';
+function edReceived() {
+  const rec = store.get('rec', []); $('#recCard').hidden = !rec.length; const ul = $('#recList'); ul.replaceChildren();
+  for (const r of rec) { const li = el('li'); li.append(el('span', { text: `${r.n} · ${fechaHora(r.ts)} · ${r.id}` }), el('a', { href: '#f=' + r.code, text: 'Abrir' })); ul.append(li); }
+}
+function initEditor() {
+  edLoad();
+  const markEdited = () => { if (ed.example) { ed.example = false; } };
+  for (const k of FIELDS) $('#' + k).addEventListener('input', () => { markEdited(); edRefresh(); });
+  $('#cuerpo').addEventListener('input', () => { ed.manual = true; markEdited(); edRefresh(); });
+  $('#msg').addEventListener('input', edRefresh);
+  $('#resetBody').addEventListener('click', () => { ed.manual = false; edRefresh(); });
+  $('#sendBtn').addEventListener('click', () => { registerSent(edDoc()); });
+  $('#copyBtn').addEventListener('click', () => { registerSent(edDoc()); copyText(edLink); });
+  $('#newBtn').addEventListener('click', () => {
+    const keep = { me_name: ed.v.me_name, me_wa: ed.v.me_wa, lugar: ed.v.lugar, dest: 'A quien corresponda' };
+    ed = { v: Object.assign({}, EJEMPLO, { f_name: '', f_cargo: '', f_emp: '', f_contacto: '', f_wa: '', rel: '', tiempo: '', puesto: ed.v.puesto, cual: ed.v.cual }, keep), manual: false, cuerpo: '', id: randomFolio(), msg: '', example: false };
+    for (const k of FIELDS) $('#' + k).value = ed.v[k] || '';
+    edRefresh(); toast('Nueva carta, folio ' + ed.id); $('#f_name').focus();
+  });
+}
+
+/* ============ VISTA FIRMANTE ============ */
+let pad = null;
+function makePad(canvas, onChange) {
+  const FW = 600; let strokes = [], cur = null, locked = false; const ctx = canvas.getContext('2d');
+  const rect = () => canvas.getBoundingClientRect();
+  function size() { const r = rect(); const d = window.devicePixelRatio || 1; canvas.width = Math.round(r.width * d); canvas.height = Math.round(r.height * d); ctx.setTransform(d, 0, 0, d, 0, 0); redraw(); }
+  function redraw() {
+    const r = rect(); ctx.clearRect(0, 0, r.width, r.height); const k = r.width / FW;
+    ctx.strokeStyle = '#1D2F7A'; ctx.fillStyle = '#1D2F7A'; ctx.lineCap = 'round'; ctx.lineJoin = 'round'; ctx.lineWidth = 2.7 * k;
+    for (const s of strokes) {
+      if (s.length === 1) { ctx.beginPath(); ctx.arc(s[0][0] * k, s[0][1] * k, ctx.lineWidth / 2, 0, 7); ctx.fill(); continue; }
+      ctx.beginPath(); ctx.moveTo(s[0][0] * k, s[0][1] * k);
+      for (let i = 1; i < s.length - 1; i++) { const mx = (s[i][0] + s[i + 1][0]) / 2, my = (s[i][1] + s[i + 1][1]) / 2; ctx.quadraticCurveTo(s[i][0] * k, s[i][1] * k, mx * k, my * k); }
+      const L = s[s.length - 1]; ctx.lineTo(L[0] * k, L[1] * k); ctx.stroke();
+    }
+  }
+  const pt = (e) => { const r = rect(); const k = FW / r.width; return [Math.round((e.clientX - r.left) * k), Math.round((e.clientY - r.top) * k)]; };
+  canvas.addEventListener('pointerdown', (e) => { if (locked) return; e.preventDefault(); try { canvas.setPointerCapture(e.pointerId); } catch (err) {} cur = [pt(e)]; strokes.push(cur); redraw(); onChange(); });
+  canvas.addEventListener('pointermove', (e) => {
+    if (!cur) return; e.preventDefault();
+    let evs = e.getCoalescedEvents ? e.getCoalescedEvents() : null;
+    if (!evs || !evs.length) evs = [e];
+    for (const ce of evs) { const p = pt(ce); const l = cur[cur.length - 1]; if (Math.hypot(p[0] - l[0], p[1] - l[1]) >= 2) cur.push(p); }
+    redraw();
+  });
+  const end = () => { if (cur) { cur = null; onChange(); } };
+  canvas.addEventListener('pointerup', end); canvas.addEventListener('pointercancel', end); canvas.addEventListener('lostpointercapture', end);
+  window.addEventListener('resize', size); size();
+  return {
+    clear() { strokes = []; redraw(); onChange(); },
+    get count() { return strokes.reduce((a, s) => a + s.length, 0); },
+    lock(v) { locked = v; },
+    export() { const r = rect(); return { w: FW, h: Math.round(r.height * FW / r.width), p: strokes.map((s) => { const out = []; let px = 0, py = 0; for (const [x, y] of s) { out.push(x - px, y - py); px = x; py = y; } return out; }) }; }
+  };
+}
+function initSign(doc) {
+  document.title = 'Firmar carta · Firmas MYOB';
+  const de = doc.de || 'Alguien';
+  $('#sgInitial').textContent = (de[0] || 'C').toUpperCase();
+  $('#sgTitle').textContent = `${firstName(de)} te pidió firmar su carta de recomendación`;
+  $('#sgFolio').textContent = 'Folio ' + doc.id;
+  renderPaper($('#sgPaper'), doc, null);
+  $('#sgName').value = doc.f.n.startsWith('[') ? '' : doc.f.n;
+  $('#sgChange').href = waLink(doc.rt, `Hola ${firstName(de)}, sobre la carta (folio ${doc.id}), me gustaría cambiar lo siguiente: `);
+  const btn = $('#sgSign');
+  const check = () => { $('#padPh').hidden = pad.count > 0; btn.disabled = !(pad.count > 4 && $('#sgOk').checked && $('#sgName').value.trim()); };
+  pad = makePad($('#padCanvas'), check);
+  $('#padClear').addEventListener('click', () => pad.clear());
+  $('#sgOk').addEventListener('change', check); $('#sgName').addEventListener('input', check);
+  let signed = null, link = '';
+  btn.addEventListener('click', async () => {
+    if (btn.disabled) return;
+    const s = pad.export(); s.n = $('#sgName').value.trim(); s.ts = new Date().toISOString(); s.h = await huella(doc);
+    signed = { d: doc, s }; const code = pack(signed); link = baseUrl() + '#f=' + code;
+    renderPaper($('#sgPaper'), doc, signed);
+    pad.lock(true); $('#pad').classList.add('locked'); $('#sgCard').hidden = true; $('#sgDone').hidden = false;
+    $('#sgReturn').href = waLink(doc.rt, `Listo, ${firstName(de)}. Aquí está la carta firmada (folio ${doc.id}):\n\n${link}`);
+    $('#sgReturnLbl').textContent = doc.rt ? `Enviar a ${firstName(de)} por WhatsApp` : 'Enviar por WhatsApp';
+    $('#sgDoneTxt').textContent = doc.rt ? `Toca el botón: se abre WhatsApp con el mensaje listo para ${firstName(de)}. Solo presiona enviar.` : 'Toca el botón, elige a quien te la pidió y presiona enviar.';
+    $('#sgDone').scrollIntoView({ behavior: 'smooth', block: 'start' });
+  });
+  $('#sgCopy').addEventListener('click', () => copyText(link));
+  $('#sgPng').addEventListener('click', () => signed && exportPNG(doc, signed));
+  $('#sgRedo').addEventListener('click', () => { signed = null; pad.lock(false); $('#pad').classList.remove('locked'); pad.clear(); $('#sgDone').hidden = true; $('#sgCard').hidden = false; renderPaper($('#sgPaper'), doc, null); });
+}
+
+/* ============ VISTA FIRMADA ============ */
+async function initSigned(signed, code) {
+  const doc = signed.d, s = signed.s;
+  document.title = 'Carta firmada · ' + doc.f.n;
+  $('#snTitle').textContent = 'Carta firmada por ' + doc.f.n;
+  $('#snSub').textContent = 'Firmó ' + s.n + ' el ' + fechaHora(s.ts) + '.';
+  $('#snFolio').textContent = 'Folio ' + doc.id;
+  renderPaper($('#snPaper'), doc, signed);
+  registerReceived(doc, signed, code);
+
+  const h = await huella(doc); const sent = store.get('sent', {})[doc.id];
+  const chips = $('#snChips'); chips.replaceChildren(); const v = $('#snVerify'); v.replaceChildren();
+  const add = (cls, txt, note) => { chips.append(el('span', { class: 'chip ' + cls, text: txt })); v.append(el('p', { style: 'margin:0 0 8px', text: note })); };
+  if (h !== s.h) add('bad', 'Datos alterados', 'La huella guardada en la firma no corresponde al texto. Pide que la vuelvan a firmar.');
+  else if (sent && sent.hashes.includes(h)) add('', 'Texto idéntico al que enviaste', 'El texto firmado es exactamente el que enviaste desde este dispositivo.');
+  else if (sent) add('bad', 'El texto cambió', 'Este folio salió de aquí, pero el texto firmado no coincide con ninguna versión que enviaste. Revísalo antes de usarlo.');
+  else add('neutral', 'Sin comparación', 'La carta se envió desde otro dispositivo o navegador, así que no hay copia local para comparar. La huella sí corresponde al texto firmado.');
+  v.append(el('p', { class: 'muted', style: 'margin:0', text: `Huella del texto: ${s.h} · Folio ${doc.id}` }));
+
+  const busy = (b, fn) => async () => { b.disabled = true; try { await fn(); } catch (e) { toast('No se pudo generar el archivo'); console.error(e); } b.disabled = false; };
+  $('#snPdf').onclick = busy($('#snPdf'), () => exportPDF(doc, signed));
+  $('#snPng').onclick = busy($('#snPng'), () => exportPNG(doc, signed));
+  $('#snPrint').onclick = busy($('#snPrint'), async () => {
+    const c = await renderSheet(doc, signed, 2); const img = c.toDataURL('image/png');
+    const f = el('iframe', { style: 'position:fixed;width:0;height:0;border:0;right:0;bottom:0' }); document.body.append(f);
+    const d = f.contentDocument; d.open(); d.write(`<!doctype html><title>Carta</title><style>@page{size:letter;margin:0}html,body{margin:0}img{width:8.5in;height:11in;display:block}</style><img src="${img}">`); d.close();
+    f.contentWindow.onload = null; setTimeout(() => { try { f.contentWindow.focus(); f.contentWindow.print(); } catch (e) { toast('Usa Descargar PDF y luego imprime'); } setTimeout(() => f.remove(), 60000); }, 300);
+  });
+  const shareB = $('#snShare');
+  if (navigator.canShare && navigator.canShare({ files: [new File([new Blob(['x'], { type: 'image/png' })], 'x.png', { type: 'image/png' })] })) {
+    shareB.hidden = false;
+    shareB.onclick = busy(shareB, async () => {
+      const c = await renderSheet(doc, signed, 2); const blob = await canvasBlob(c, 'image/png');
+      const file = new File([blob], `Carta-recomendacion-${fileSafe(doc.f.n)}-${doc.id}.png`, { type: 'image/png' });
+      try { await navigator.share({ files: [file], title: 'Carta de recomendación' }); } catch (e) {}
+    });
+  }
+}
+
+/* ============ ROUTER ============ */
+function show(id) { for (const v of ['#vEditor', '#vSign', '#vSigned', '#vError']) $(v).hidden = v !== id; $('#toEditor').hidden = id === '#vEditor' || id === '#vSign'; window.scrollTo(0, 0); }
+let editorReady = false;
+async function route() {
+  const h = location.hash;
+  try {
+    if (h.startsWith('#c=')) { const doc = await unpack(h.slice(3)); if (!doc || !doc.cuerpo || !doc.f) throw new Error('doc'); show('#vSign'); initSign(doc); return; }
+    if (h.startsWith('#f=')) { const sg = await unpack(h.slice(3)); if (!sg || !sg.d || !sg.s) throw new Error('sig'); show('#vSigned'); await initSigned(sg, h.slice(3)); return; }
+  } catch (e) { console.error(e); show('#vError'); return; }
+  show('#vEditor'); if (!editorReady) { initEditor(); editorReady = true; } edRefresh(); edReceived();
+}
+const goHome = (e) => { e.preventDefault(); history.pushState(null, '', baseUrl()); route(); };
+$('#brandLink').addEventListener('click', goHome); $('#toEditor').addEventListener('click', goHome); $('#errHome').addEventListener('click', goHome);
+let lastHash = location.hash;
+window.addEventListener('hashchange', () => { if (location.hash.startsWith('#c=') || location.hash.startsWith('#f=') || lastHash !== location.hash) { lastHash = location.hash; location.reload(); } });
+route();
+})();
+</script>
+</body>
+</html>
